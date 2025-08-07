@@ -9,12 +9,16 @@ use App\Entity\Category;
 use App\Repository\CategoryRepository;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Psr\Log\LoggerInterface;
+
 
 final class CategoryBySlugStateProvider implements ProviderInterface
 {
     public function __construct(
-        private CategoryRepository $categoryRepository,
-        private CacheInterface $cache
+        private readonly CategoryRepository $categoryRepository,
+        private CacheInterface $cache,
+        private readonly LoggerInterface $logger
     )
     {
 
@@ -32,7 +36,24 @@ final class CategoryBySlugStateProvider implements ProviderInterface
             throw new NotFoundHttpException('Slug parameter missing.');
         }
 
-        $alias = $context['request']->attributes->get('slug');
+        $request = $context['request'] ?? null;
+
+        if ($request) {
+            // Get all headers as an array
+            $headers = $request->headers->all();
+
+            // Or get a specific header, e.g., Authorization
+            $authorizationHeader = $request->headers->get('Authorization');
+
+            $this->logger->info('Authorization header: ' . $headers);
+            $this->logger->info('Authorization header: ' . $authorizationHeader);
+            // For debugging, you can log or inspect headers here
+            // e.g. error_log(print_r($headers, true));
+        } else {
+            // $request object not found in context
+        }
+
+        $alias = $request->attributes->get('slug');
         $cacheKey = sprintf('category_by_slug_%s', $alias);
         $category = $this->cache->get($cacheKey, function() use ($alias) {
             return $this->categoryRepository->findOneBy(['slug' => $alias]);

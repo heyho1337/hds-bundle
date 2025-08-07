@@ -23,6 +23,7 @@ use App\State\CategoryBySlugStateProvider;
         'shared_max_age' => 3600,
         'public' => true,
     ],
+    security: "is_granted('ROLE_ADMIN')",
     operations: [
         new Get(), // default /categories/{id}
         new GetCollection(),
