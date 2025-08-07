@@ -42,6 +42,7 @@ final class CategoryBySlugStateProvider implements ProviderInterface
             // Get all headers as an array
             $headers = $request->headers->all();
             $this->logger->info('fasz');
+            $this->logger->info('PHP $_SERVER HTTP_AUTHORIZATION: ' . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'not set'));
             $this->logger->info('Context keys: ' . implode(', ', array_keys($context)));
             $this->logger->info('Request URI: ' . $request->getRequestUri());
             $this->logger->info('Request method: ' . $request->getMethod());
