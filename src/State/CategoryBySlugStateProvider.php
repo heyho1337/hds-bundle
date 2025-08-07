@@ -44,6 +44,7 @@ final class CategoryBySlugStateProvider implements ProviderInterface
             $this->logger->error('fasz');
 
             // Convert headers array to string for logging
+            $this->logger->error('Request: ' . print_r($request, true));
             $this->logger->error('Request headers: ' . print_r($headers, true));
 
             // Log the Authorization header specifically
