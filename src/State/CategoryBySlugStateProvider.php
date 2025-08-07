@@ -41,14 +41,15 @@ final class CategoryBySlugStateProvider implements ProviderInterface
         if ($request) {
             // Get all headers as an array
             $headers = $request->headers->all();
-            $this->logger->error('fasz');
+            $this->logger->info('fasz');
 
             // Convert headers array to string for logging
-            $this->logger->error('Request: ' . print_r($request, true));
-            $this->logger->error('Request headers: ' . print_r($headers, true));
+            $this->logger->info('context: ' . print_r($context, true));
+            $this->logger->info('Request: ' . print_r($request, true));
+            $this->logger->info('Request headers: ' . print_r($headers, true));
 
             // Log the Authorization header specifically
-            $this->logger->error('Authorization header: ' . ($authorizationHeader ?? 'none'));
+            $this->logger->info('Authorization header: ' . ($authorizationHeader ?? 'none'));
                         // For debugging, you can log or inspect headers here
             // e.g. error_log(print_r($headers, true));
         } else {
