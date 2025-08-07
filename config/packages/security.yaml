@@ -67,8 +67,8 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }    # Allow anyone to see login page
         - { path: ^/admin, roles: ROLE_ADMIN }       # Restrict /admin to ROLE_ADMIN users
         - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
-        - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
-        #- { path: ^/api, roles: PUBLIC_ACCESS }
+        #- { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: PUBLIC_ACCESS }
         - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
 
 when@test:
