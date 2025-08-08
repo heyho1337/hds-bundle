@@ -18,7 +18,7 @@ use ApiPlatform\Metadata\GetCollection;
         new Get(),
         new GetCollection()
     ],
-    security: "is_granted('ROLE_ADMIN')"
+    security: "is_granted('ROLE_API')"
 )]
 
 #[ORM\Entity(repositoryClass: TagRepository::class)]

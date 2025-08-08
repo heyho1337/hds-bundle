@@ -45,7 +45,7 @@ use App\State\BlogBySlugStateProvider;
             //read: false
         ),
     ],
-    security: "is_granted('ROLE_ADMIN')"
+    security: "is_granted('ROLE_API')"
 )]
 #[ORM\Entity(repositoryClass: BlogRepository::class)]
 class Blog

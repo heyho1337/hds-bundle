@@ -1,9 +1,11 @@
+# config/packages/security.yaml
+
 security:
     # Password Hasher Configuration
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # User Provider (loads users from database via Doctrine)
+    # User Provider (used for admin login)
     providers:
         app_user_provider:
             entity:
@@ -16,30 +18,13 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        api_login:
-            pattern: ^/api/login
-            stateless: true
-            json_login:
-                check_path: /api/login_check
-                username_path: email
-                password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-
+        # API firewall using custom API key authenticator
         api:
             pattern: ^/api
             stateless: true
-            entry_point: jwt
-            json_login:
-                check_path: /api/login_check
-                username_path: email
-                password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-            jwt: ~  # enable JWT for API routes
-            refresh_jwt:
-                check_path: /api/token/refresh
+            custom_authenticator: App\Security\ApiKeyAuthenticator
 
+        # Main firewall for admin UI etc.
         main:
             lazy: true
             provider: app_user_provider
@@ -47,35 +32,22 @@ security:
             entry_point: form_login
 
             form_login:
-                login_path: app_login                # route name of your login page route
-                check_path: app_login                # same route if form posts to itself
-                default_target_path: /admin          # redirect after successful login
+                login_path: app_login
+                check_path: app_login
+                default_target_path: /admin
                 enable_csrf: true
 
             logout:
-                path: app_logout                     # route name for logout
-                target: app_login                    # where to redirect after logout
+                path: app_logout
+                target: app_login
 
             remember_me:
                 secret: '%kernel.secret%'
-                lifetime: 604800                     # 1 week in seconds
+                lifetime: 604800
                 path: /
-                # always_remember_me: true           # Optional: enable without checkbox
 
-    # Access Control
+    # Access Control Rules
     access_control:
-        - { path: ^/login, roles: PUBLIC_ACCESS }    # Allow anyone to see login page
-        - { path: ^/admin, roles: ROLE_ADMIN }       # Restrict /admin to ROLE_ADMIN users
-        - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
-        #- { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api, roles: PUBLIC_ACCESS }
-        - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
-
-when@test:
-    security:
-        password_hashers:
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4           # Lowest possible value for bcrypt
-                time_cost: 3      # Lowest for argon
-                memory_cost: 10   # Lowest for argon
+        - { path: ^/login, roles: PUBLIC_ACCESS }       # Public login page
+        - { path: ^/admin, roles: ROLE_ADMIN }          # Admin pages restricted to ROLE_ADMIN only
+        - { path: ^/api, roles: ROLE_API }               # API access limited to authenticated API key users
