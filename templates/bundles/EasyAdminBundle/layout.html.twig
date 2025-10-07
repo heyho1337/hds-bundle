@@ -1,0 +1,11 @@
+{% extends '@!EasyAdmin/layout.html.twig' %}
+{% block importmap %}
+    {{ parent() }}
+    <script type="module" src="/assets/@symfony/stimulus-bundle/loader.js"></script>
+    <script type="module" src="/assets/app.js"></script>
+{% endblock %}
+
+{% block head_stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('styles/admin/admin.css') }}">
+{% endblock %}

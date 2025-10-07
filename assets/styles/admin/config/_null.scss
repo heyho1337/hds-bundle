@@ -1,0 +1,21 @@
+.hide{
+    display:none;
+}
+.field-text.form-group:has(> .form-widget > .hide){
+    display:none;
+}
+
+.sub{
+    > td{
+        background: #1c1c1c !important;
+    }
+}
+
+.index-image{
+    img{
+        object-fit: contain;
+        width:200px;
+        max-height:200px;
+        height:initial;
+    }
+}

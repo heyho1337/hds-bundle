@@ -1,0 +1,11 @@
+@layer default, comp;
+
+@layer default{
+	@import "config/null";
+}
+
+@layer comp{
+	@import "modules/filepond";
+	@import "modules/galleryView";
+	@import '../../vendor/lightgallery/scss/lightgallery.scss';
+}

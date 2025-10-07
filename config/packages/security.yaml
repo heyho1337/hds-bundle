@@ -27,6 +27,7 @@ security:
         # Main firewall for admin UI etc.
         main:
             lazy: true
+            stateless: false
             provider: app_user_provider
             custom_authenticator: App\Security\UserAuthenticator
             entry_point: form_login
@@ -50,4 +51,5 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }       # Public login page
         - { path: ^/admin, roles: ROLE_ADMIN }          # Admin pages restricted to ROLE_ADMIN only
-        - { path: ^/api, roles: ROLE_API }               # API access limited to authenticated API key users
+        #- { path: ^/api, roles: ROLE_API }               # API access limited to authenticated API key users
+        - { path: ^/api, roles: PUBLIC_ACCESS }  

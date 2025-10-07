@@ -7,18 +7,21 @@ use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\Metadata\Operation;
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
+use App\Service\Modules\CacheService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Psr\Log\LoggerInterface;
-
+use App\Service\Modules\LangService;
+use App\Service\Modules\TranslateService;
 
 final class CategoryBySlugStateProvider implements ProviderInterface
 {
     public function __construct(
         private readonly CategoryRepository $categoryRepository,
-        private CacheInterface $cache,
-        private readonly LoggerInterface $logger
+        private CacheService $cache,
+        private readonly LoggerInterface $logger,
+        private readonly LangService $langService,
+        private readonly TranslateService $translateService,
     )
     {
 
@@ -38,28 +41,11 @@ final class CategoryBySlugStateProvider implements ProviderInterface
 
         $request = $context['request'] ?? null;
 
-        if ($request) {
-            // Get all headers as an array
-            $headers = $request->headers->all();
-            $this->logger->info('fasz');
-            $this->logger->info('PHP $_SERVER HTTP_AUTHORIZATION: ' . ($_SERVER['HTTP_AUTHORIZATION'] ?? 'not set'));
-            $this->logger->info('Context keys: ' . implode(', ', array_keys($context)));
-            $this->logger->info('Request URI: ' . $request->getRequestUri());
-            $this->logger->info('Request method: ' . $request->getMethod());
-
-            $headers = $request->headers->all();
-            $this->logger->info('Authorization header: ' . $request->headers->get('Authorization', 'none'));
-
-            // Optionally, log specific important headers or at most headers keys
-            $this->logger->info('Request header keys: ' . implode(', ', array_keys($headers)));
-        } else {
-            // $request object not found in context
-        }
+        $slug_column = "slug_".$this->langService->getCurrentLang();
 
         $alias = $request->attributes->get('slug');
-        $cacheKey = sprintf('category_by_slug_%s', $alias);
-        $category = $this->cache->get($cacheKey, function() use ($alias) {
-            return $this->categoryRepository->findOneBy(['slug' => $alias]);
+        $category = $this->cache->getFromCache("category_by_slug",$alias,function() use ($alias,$slug_column) {
+            return $this->categoryRepository->findOneBy([$slug_column => $alias]);
         });
 
         if (!$category) {

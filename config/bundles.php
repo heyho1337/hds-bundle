@@ -16,4 +16,12 @@ return [
     FOS\CKEditorBundle\FOSCKEditorBundle::class => ['all' => true],
     Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle::class => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
+    Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true],
+    Symfony\UX\StimulusBundle\StimulusBundle::class => ['all' => true],
+    Symfony\UX\Turbo\TurboBundle::class => ['all' => true],
+    Rekalogika\TemporaryUrl\RekalogikaTemporaryUrlBundle::class => ['all' => true],
+    Rekalogika\File\Bundle\RekalogikaFileBundle::class => ['all' => true],
+    Rekalogika\File\Bridge\FilePond\RekalogikaFileFilePondBundle::class => ['all' => true],
+    Rekalogika\DirectPropertyAccess\RekalogikaDirectPropertyAccessBundle::class => ['all' => true],
+    Rekalogika\Reconstitutor\RekalogikaReconstitutorBundle::class => ['all' => true],
 ];

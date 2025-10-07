@@ -15,20 +15,32 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Migrations/'
+            - '../src/Tests/'
     App\State\CategoryBySlugStateProvider:
         autowire: true
         autoconfigure: true
         public: true        # optional, useful for debugging
         tags:
-        - { name: 'api_platform.state_provider' }
+            - { name: 'api_platform.state_provider' }
     App\State\BlogBySlugStateProvider:
         autowire: true
         autoconfigure: true
         public: true        # optional, useful for debugging
         tags:
-        - { name: 'api_platform.state_provider' }
+            - { name: 'api_platform.state_provider' }
     App\Security\ApiKeyAuthenticator:
         arguments:
             $apiKey: '%env(resolve:API_KEY_SECRET)%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    Stichoza\GoogleTranslate\GoogleTranslate: 
+    App\EventSubscriber\EntityLocalizationSubscriber:
+        public: true
+        autowire: true
+        autoconfigure: true
+        tags:
+            - { name: doctrine.event_listener, event: postLoad }

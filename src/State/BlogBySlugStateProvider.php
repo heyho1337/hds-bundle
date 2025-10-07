@@ -6,14 +6,16 @@ use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\Metadata\Operation;
 use App\Entity\Blog;
 use App\Repository\BlogRepository;
+use App\Service\Modules\CacheService;
+use App\Service\Modules\LangService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Contracts\Cache\CacheInterface;
 
 final class BlogBySlugStateProvider implements ProviderInterface
 {
     public function __construct(
-        private BlogRepository $blogRepository,
-        private CacheInterface $cache
+        private readonly BlogRepository $blogRepository,
+        private CacheService $cache,
+        private readonly LangService $langService
     )
     {
 
@@ -33,9 +35,9 @@ final class BlogBySlugStateProvider implements ProviderInterface
 
         $alias = $context['request']->attributes->get('slug');
 
-        $cacheKey = sprintf('blog_by_slug_%s', $alias);
-        $blog = $this->cache->get($cacheKey, function() use ($alias) {
-            return $this->blogRepository->findOneBy(['slug' => $alias]);
+        $slug_column = "slug_".$this->langService->getCurrentLang();
+        $blog = $this->cache->getFromCache("blog_by_slug",$alias,function() use ($alias,$slug_column) {
+            return $this->blogRepository->findOneBy([$slug_column => $alias]);
         });
 
         if (!$blog) {

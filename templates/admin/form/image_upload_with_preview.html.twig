@@ -1,16 +1,14 @@
-{% extends '@EasyAdmin/crud/form_theme.html.twig' %}
+{# admin/form/image_upload_with_preview.html.twig #}
 
-{% block _Blog_image_widget %}
-    {% set blogImage = form.parent.vars.data.image ?? null %}
+{% set image = form.parent.vars.data.image ?? null %}
 
-    {% if ea.crud.currentAction == 'edit' and blogImage %}
-        <div style="margin-bottom: 1rem;">
-            <img src="{{ asset('uploads/blog/' ~ blogImage ~ '_cropped.webp') }}"
-                 alt="Current image"
-                 style="max-width: 300px; border: 1px solid #ccc; padding: 4px;"
-            />
-        </div>
-    {% endif %}
-    <strong>Upload new image:</strong><br>
-    {{ block('file_widget') }}
-{% endblock %}
+{% if ea.crud.currentAction == 'edit' and image %}
+    <div style="margin-bottom: 1rem;">
+        <img src="{{ asset('uploads/'~ path ~'/' ~ image ~ '.webp') }}"
+             alt="Current image"
+             style="max-width: 300px; border: 1px solid #ccc; padding: 4px;"
+        />
+    </div>
+{% endif %}
+
+{{ form_widget(form) }}

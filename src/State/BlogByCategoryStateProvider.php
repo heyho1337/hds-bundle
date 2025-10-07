@@ -4,23 +4,22 @@ namespace App\State;
 
 use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\Metadata\Operation;
-use App\Entity\Blog;
 use App\Repository\BlogRepository;
+use App\Service\Modules\CacheService;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Contracts\Cache\CacheInterface;
 
 final class BlogByCategoryStateProvider implements ProviderInterface
 {
 
     public function __construct(
         private BlogRepository $blogRepository,
-        private CacheInterface $cache
+        private CacheService $cache
     )
     {
 
     }
 
-    public function provide(Operation $operation, array $uriVariables = [], array $context = []): ?BlogPaginator
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): ?Paginator
     {
         if ($operation->getName() !== 'get_blog_by_category') {
             return null;
@@ -38,15 +37,11 @@ final class BlogByCategoryStateProvider implements ProviderInterface
             $offset = $page * $limit;
         }
 
-        $cacheKey = sprintf('blog_by_category_%d_%d_%d', $uriVariables['id'], $limit, $offset);
-
-        $blogList = $this->cache->get($cacheKey, function() use ($uriVariables, $limit, $offset) {
+        $blogList = $this->cache->getFromCache("blog_by_category",$uriVariables['id']."_".$limit."_".$offset,function() use ($uriVariables, $limit, $offset) {
             return $this->blogRepository->findByCategoryPaginated($uriVariables['id'], $limit, $offset);
         });
 
-        $totalItemsCacheKey = sprintf('blog_total_by_category_%d', $uriVariables['id']);
-
-        $totalItems = $this->cache->get($totalItemsCacheKey, function() use ($uriVariables) {
+        $totalItems = $this->cache->getFromCache("blog_total_by_category",$uriVariables['id'],function() use ($uriVariables) {
             return $this->blogRepository->countByCategory($uriVariables['id']);
         });
 
@@ -54,7 +49,7 @@ final class BlogByCategoryStateProvider implements ProviderInterface
             throw new NotFoundHttpException('BlogList not found.');
         }
 
-        return new BlogPaginator($blogList, $totalItems);
+        return new Paginator($blogList, $totalItems);
     }
 
 }

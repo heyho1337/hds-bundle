@@ -49,15 +49,14 @@ class Category
     #[ApiProperty(identifier: true)]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    private static string $currentLang = 'en';
+
     #[Groups(['category:read'])]
     private ?string $name = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['category:read'])]
     private ?string $meta_desc = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['category:read'])]
     private ?string $title = null;
 
@@ -65,11 +64,9 @@ class Category
     #[Groups(['category:read'])]
     private ?string $image = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['category:read'])]
     private ?string $short_desc = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['category:read'])]
     private ?string $text = null;
 
@@ -88,10 +85,51 @@ class Category
     #[Groups(['category:read'])]
     private Collection $articles;
 
-    #[Gedmo\Slug(fields: ['name'])]
-    #[ORM\Column(length: 255)]
     #[Groups(['category:read'])]
+    #[ApiProperty(readable: true)]
     private ?string $slug = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $name_hu = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $name_en = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $title_hu = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $title_en = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $short_desc_hu = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $short_desc_en = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $text_hu = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $text_en = null;
+
+    #[Gedmo\Slug(fields: ['name_hu'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $slug_hu = null;
+
+    #[Gedmo\Slug(fields: ['name_en'])]
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $slug_en = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $meta_desc_hu = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $meta_desc_en = null;
+
+    #[ORM\Column]
+    #[Groups(['category:read'])]
+    private ?bool $active = null;
 
     public function __construct()
     {
@@ -108,7 +146,7 @@ class Category
         return $this->name;
     }
 
-    public function setName(string $name): static
+    public function setName(?string $name): static
     {
         $this->name = $name;
 
@@ -241,8 +279,180 @@ class Category
         return $this;
     }
 
+    /*public function __toString(): string
+    {
+        return $this->getName() ?? '—';
+    }*/
+
+    public static function setCurrentLang(string $lang): void
+    {
+        self::$currentLang = $lang;
+    }
+
     public function __toString(): string
     {
-        return $this->name ?? '—';
+        $getter = 'getName' . self::$currentLang;
+        if (method_exists($this, $getter)) {
+            return (string) $this->$getter();
+        }
+
+        return '';
     }
+
+    public function getNameHu(): ?string
+    {
+        return $this->name_hu;
+    }
+
+    public function setNameHu(?string $name_hu): static
+    {
+        $this->name_hu = $name_hu;
+
+        return $this;
+    }
+
+    public function getNameEn(): ?string
+    {
+        return $this->name_en;
+    }
+
+    public function setNameEn(?string $name_en): static
+    {
+        $this->name_en = $name_en;
+
+        return $this;
+    }
+
+    public function getTitleHu(): ?string
+    {
+        return $this->title_hu;
+    }
+
+    public function setTitleHu(?string $title_hu): static
+    {
+        $this->title_hu = $title_hu;
+
+        return $this;
+    }
+
+    public function getTitleEn(): ?string
+    {
+        return $this->title_en;
+    }
+
+    public function setTitleEn(?string $title_en): static
+    {
+        $this->title_en = $title_en;
+
+        return $this;
+    }
+
+    public function getShortDescHu(): ?string
+    {
+        return $this->short_desc_hu;
+    }
+
+    public function setShortDescHu(?string $short_desc_hu): static
+    {
+        $this->short_desc_hu = $short_desc_hu;
+
+        return $this;
+    }
+
+    public function getShortDescEn(): ?string
+    {
+        return $this->short_desc_en;
+    }
+
+    public function setShortDescEn(string $short_desc_en): static
+    {
+        $this->short_desc_en = $short_desc_en;
+
+        return $this;
+    }
+
+    public function getTextHu(): ?string
+    {
+        return $this->text_hu;
+    }
+
+    public function setTextHu(?string $text_hu): static
+    {
+        $this->text_hu = $text_hu;
+
+        return $this;
+    }
+
+    public function getTextEn(): ?string
+    {
+        return $this->text_en;
+    }
+
+    public function setTextEn(?string $text_en): static
+    {
+        $this->text_en = $text_en;
+
+        return $this;
+    }
+
+    public function getSlugHu(): ?string
+    {
+        return $this->slug_hu;
+    }
+
+    public function setSlugHu(?string $slug_hu): static
+    {
+        $this->slug_hu = $slug_hu;
+
+        return $this;
+    }
+
+    public function getSlugEn(): ?string
+    {
+        return $this->slug_en;
+    }
+
+    public function setSlugEn(?string $slug_en): static
+    {
+        $this->slug_en = $slug_en;
+
+        return $this;
+    }
+
+    public function getMetaDescHu(): ?string
+    {
+        return $this->meta_desc_hu;
+    }
+
+    public function setMetaDescHu(?string $meta_desc_hu): static
+    {
+        $this->meta_desc_hu = $meta_desc_hu;
+
+        return $this;
+    }
+
+    public function getMetaDescEn(): ?string
+    {
+        return $this->meta_desc_en;
+    }
+
+    public function setMetaDescEn(?string $meta_desc_en): static
+    {
+        $this->meta_desc_en = $meta_desc_en;
+
+        return $this;
+    }
+
+    public function isActive(): ?bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): static
+    {
+        $this->active = $active;
+
+        return $this;
+    }
+    
 }

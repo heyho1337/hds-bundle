@@ -1,0 +1,18 @@
+{% extends '@EasyAdmin/crud/new.html.twig' %}
+
+{% block main %}
+    <turbo-frame id="modal-frame">
+        {{ parent() }}
+        {% block page_actions %}
+            <div data-controller="accordion-submit" data-accordion-submit-url-value="{{ addAccordionItemUrl ?? app.request.uri }}">
+                <button 
+                    type="submit" 
+                    data-action="click->accordion-submit#save"
+                    class="btn btn-primary"
+                >
+                    {{ 'Save'|trans }}
+                </button>
+            </div>
+        {% endblock %}
+    </turbo-frame>
+{% endblock %}
