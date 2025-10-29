@@ -1,0 +1,110 @@
+{% extends '@EasyAdmin/crud/index.html.twig' %}
+{% import _self as macros %}
+
+{% block page_actions %}
+    {{ parent() }}
+
+    <button 
+        type="button" 
+        class="btn btn-primary"
+        data-action="modal#load"
+        data-controller="modal"
+        data-bs-toggle="modal" 
+        data-bs-target="#modal" 
+        data-class="Slide"
+        data-path="slide"
+        data-modal-url="{{ path('image_upload') }}"
+        data-modal-title="{{ 'Add Slides'|trans }}">
+        {{ 'Add Slides'|trans }}
+    </button>
+{% endblock %}
+
+{# Macro to render a single slide item as a <li> with nested children if any #}
+{% macro renderSlideTree(slideData, slidesById, batch_actions, sort_field_name, ea) %}
+    <li data-id="{{ slideData.entity.id }}" data-sortable-update-url="{{ path('order', {id: slideData.entity.id }) }}">
+        <div class="slide-item">
+            {% for field in slideData.dto.fields %}
+                {% set is_searchable = (ea.crud.searchFields is null) or (field.property in ea.crud.searchFields) %}
+                <span
+                    data-column="{{ field.property }}"
+                    data-label="{{ field.label|trans|e('html') }}"
+                    class="{{ is_searchable ? 'searchable' }} {{ field.property == sort_field_name ? 'sorted' }} text-{{ field.textAlign }} {{ field.cssClass }}"
+                    dir="{{ ea.i18n.textDirection }}"
+                    {% for name, value in field.htmlAttributes %}{{ name }}="{{ value|e('html_attr') }}" {% endfor %}
+                >
+                    {{ include(field.templatePath, { field: field, entity: slideData.dto }, with_context = false) }}
+                </span>
+            {% endfor %}
+
+
+            {# Delete icon/link #}
+            <a href="#" 
+                class="slide-delete-icon"
+                title="{{ 'Delete'|trans }}"
+                data-action="delete"
+                data-delete-url="{{ ea_url()
+                    .setController(ea.crud.controllerFqcn)
+                    .setAction('delete')
+                    .setEntityId(slideData.dto.primaryKeyValue)
+                    .generateUrl() }}"
+                onclick="
+                    if(confirm('{{ 'Are you sure you want to delete this item?'|trans }}')){
+                        const form = document.getElementById('delete-form');
+                        form.setAttribute('action', this.getAttribute('data-delete-url'));
+                        form.submit();
+                    }
+                    return false;
+                "
+            >
+                🗑️
+            </a>
+        </div>
+    </li>
+{% endmacro %}
+
+{# Macro to render header as a <ul><li> list #}
+{% macro renderHeader(fields, batch_actions) %}
+    <ul class="slide-header">
+        <li class="slide-header-item">
+            {% if batch_actions|length > 0 %}
+                <span class="checkbox-col"></span>
+            {% endif %}
+            {% for field in fields %}
+                <span class="header-field">{{ field.label|trans }}</span>
+            {% endfor %}
+        </li>
+    </ul>
+{% endmacro %}
+
+{% block table_head %}
+{% endblock %}
+
+{# block to render header and the nested slide tree as UL/LI #}
+{% block table_body %}
+    {# Render header as UL/LI #}
+    {% if entities|length > 0 %}
+        {{ macros.renderHeader(entities|first.fields, batch_actions) }}
+    {% endif %}
+    <div id="slide-list-container">
+        {# Render nested slide tree below header #}
+        <div data-controller="sortable" 
+            data-sortable-resource-name-value="slide" 
+            data-sortable-param-name-value="order_num" 
+            class="slide-tree">
+            {# Step 1: Flatten all slides #}
+            {% set slidesById = {} %}
+            {% for entityDto in entities %}
+                {% set slide = entityDto.getInstance() %}
+                {% set slidesById = slidesById | merge({ (slide.id): { 'dto': entityDto, 'entity': slide } }) %}
+            {% endfor %}
+
+            <ul data-sortable="true">
+                {% for slideData in slidesById %}
+                    {{ macros.renderSlideTree(slideData, slidesById, batch_actions, sort_field_name, ea) }}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    {% include 'admin/modules/modal.html.twig' %}
+{% endblock %}

@@ -57,14 +57,14 @@ class SchemaCrudController extends AbstractCrudController
                 ->onlyOnForms();
 
 
-        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getName()));
+        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getLangsName()));
             yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
                 ->hideOnIndex();
 
         foreach($this->langService->getLangs() as $lang){
-            if(!$lang->isDefault()){
-                yield FormField::addTab($this->translateService->translateSzavak($lang->getName()));
-                yield TextField::new('name_'.$lang->getCode(), $this->translateService->translateSzavak("name"))
+            if(!$lang->isLangsDefault()){
+                yield FormField::addTab($this->translateService->translateSzavak($lang->getLangsName()));
+                yield TextField::new('name_'.$lang->getLangsCode(), $this->translateService->translateSzavak("name"))
                     ->hideOnIndex();
             }
         }

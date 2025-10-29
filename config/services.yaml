@@ -44,8 +44,3 @@ services:
         autoconfigure: true
         tags:
             - { name: doctrine.event_listener, event: postLoad }
-    Redis:
-        class: Redis
-        factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
-        arguments:
-            - '%env(REDIS_URL)%'

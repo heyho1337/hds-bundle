@@ -1,14 +1,14 @@
 {{ form_start(form, {
     'action': path('image_upload'),
     'attr': {
-        'data-controller': 'admin--image-upload',
+        'data-controller': 'image-upload',
         'enctype': 'multipart/form-data',
         'data-turbo-frame': 'modal-frame'
     }
 }) }}
     {{ form_row(form.images, {
         attr: {
-            'data-admin--image-upload-target': 'input',
+            'data-image-upload-target': 'input',
             class: 'filepond',
             accept: 'image/*',
             multiple: 'multiple'
@@ -17,6 +17,6 @@
 
     <button class="btn btn-primary">{{ 'Upload'|trans }}</button>
 
-    {{ form_row(form.class, {attr: {'data-admin--image-upload-target': 'classInput'} }) }}
-    {{ form_row(form.path, {attr: {'data-admin--image-upload-target': 'pathInput'} }) }}
+    {{ form_row(form.class, {attr: {'data-image-upload-target': 'classInput'} }) }}
+    {{ form_row(form.path, {attr: {'data-image-upload-target': 'pathInput'} }) }}
 {{ form_end(form) }}

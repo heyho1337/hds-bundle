@@ -13,7 +13,7 @@ class EntityLocalizationSubscriber
     private string $target;
 
     private array $entitiesToLocalize = [
-        'Szavak','Category','Tag','Blog','Accordion','AccordionItem','Gallery','GalleryImage','Article','Slide','Form','FormInput','FormType' 
+        'Szavak','Category','Tag','Blog','Accordion','AccordionItem','Gallery','GalleryImage','Article','Slide'
     ];
 
     public function __construct(

@@ -91,18 +91,6 @@
             "ref": "f5ad42002183a6881962683e6d84bbb25cdfce5d"
         }
     },
-    "knpuniversity/oauth2-client-bundle": {
-        "version": "2.19",
-        "recipe": {
-            "repo": "github.com/symfony/recipes-contrib",
-            "branch": "main",
-            "version": "1.20",
-            "ref": "1ff300d8c030f55c99219cc55050b97a695af3f6"
-        },
-        "files": [
-            "config/packages/knpu_oauth2_client.yaml"
-        ]
-    },
     "nelmio/cors-bundle": {
         "version": "2.5",
         "recipe": {
@@ -341,30 +329,6 @@
             "ref": "0df5844274d871b37fc3816c57a768ffc60a43a5"
         }
     },
-    "symfony/ux-autocomplete": {
-        "version": "2.31",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "2.6",
-            "ref": "07d9602b7231ba355f484305d6cea58310c01741"
-        },
-        "files": [
-            "config/routes/ux_autocomplete.yaml"
-        ]
-    },
-    "symfony/ux-icons": {
-        "version": "2.31",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "2.17",
-            "ref": "803a3bbd5893f9584969ab8670290cdfb6a0a5b5"
-        },
-        "files": [
-            "assets/icons/symfony.svg"
-        ]
-    },
     "symfony/ux-turbo": {
         "version": "2.30",
         "recipe": {
@@ -412,18 +376,6 @@
         "files": [
             "config/packages/web_profiler.yaml",
             "config/routes/web_profiler.yaml"
-        ]
-    },
-    "symfonycasts/tailwind-bundle": {
-        "version": "0.11",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "main",
-            "version": "0.8",
-            "ref": "d0bd0276f74de90adfaa4c6cd74cc0caacd77e0a"
-        },
-        "files": [
-            "config/packages/symfonycasts_tailwind.yaml"
         ]
     },
     "twig/extra-bundle": {
