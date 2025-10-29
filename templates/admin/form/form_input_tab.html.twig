@@ -1,0 +1,55 @@
+{% block _Form_children_widget %}
+    {% set children = form.parent.vars.data.children ?? [] %}
+        <div data-controller="admin--sortable admin--modal"
+            data-admin--sortable-resource-name-value="form_input"
+            data-admin--sortable-param-name-value="order_num"
+            class="form-input-list">
+                {% for type in formType %}
+                    <button type="button"
+                        class="btn btn-primary mb-3"
+                        data-action="modal#load"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal"
+                        data-class="FormInput"
+                        data-path="form_input"
+                        data-admin--modal-url="{{ adminUrlGenerator
+                            .setController('App\\Controller\\Admin\\Crud\\FormInputCrudController')
+                            .setAction('new')
+                            .unset('entityId')
+                            .set('parent', form.parent.vars.data.id)
+                            .set('type', type.id)
+                            .generateUrl() }}"
+                        data-admin--modal-title="{{ 'Add Form Input'|trans }}">
+                            {{ type.name }}
+                    </button>
+                {% endfor %}
+
+        {% if children|length > 0 %}
+            <ul data-admin--sortable="true" class="list-unstyled">
+                {% for child in children %}
+                    <li data-id="{{ child.id }}" data-sortable-update-url="{{ path('order', { id: child.id }) }}">
+                        <div class="item d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                            {{ render_child_forms(child.id) }}
+                            <div>
+                                <a href="{{ path('admin_accordion_item_edit', { entityId: child.id }) }}"
+                                   class="btn btn-sm btn-outline-secondary me-2">
+                                    {{ 'Edit'|trans }}
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-danger"
+                                   data-action="delete"
+                                   data-delete-url="{{ path('admin_accordion_item_delete', { entityId: child.id }) }}"
+                                   onclick="if(confirm('{{ 'Are you sure you want to delete this item?'|trans }}')) { const form = document.getElementById('delete-form'); form.setAttribute('action', this.getAttribute('data-delete-url')); form.submit(); } return false;">
+                                    {{ 'Delete'|trans }}
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>{{ 'No form items found.'|trans }}</p>
+        {% endif %}
+    </div>
+
+    {% include 'admin/modules/modal.html.twig' %}
+{% endblock %}

@@ -3,7 +3,7 @@
 namespace App\Service\Modules;
 
 use App\Entity\Szavak;
-use App\ENtity\Langs;
+use App\Entity\Langs;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\LangsRepository;
 use App\Repository\SzavakRepository;
@@ -23,22 +23,22 @@ class LangService
         private readonly SzavakRepository $szavakRepo,
         private CacheService $cache,
     ) {
-        $this->default = $this->cache->getFromCache('lang_default_',"0", function() {
-            return $this->langsRepo->findOneBy(['langs_aktiv' => 1, 'langs_default' => 1]);
+
+        $langRepo = $this->langsRepo;
+        
+        $this->default = $this->cache->getOrSet('default_lang', function () use ($langRepo) {
+            return $langRepo->findOneBy(['active' => 1, 'default' => 1]);
         });
 
         $this->currentLang = $this->resolveLangFromCookie();
 
-        /*
-        $this->szavak = $this->cache->getFromCache('szavak_list_',$this->currentLang, function() {
-            return $this->szavakRepo->findAll();
+        $repo = $this->szavakRepo;
+        $this->szavak = $this->cache->getOrSet('szavak:' . $this->currentLang, function () use ($repo) {
+            return $repo->findAll();
         });
-        */
 
-        $this->szavak = $this->szavakRepo->findAll();
-
-        $this->langList = $this->cache->getFromCache('lang_list_',"0", function() {
-            return $this->langsRepo->findBy(['langs_aktiv' => 1]);
+        $this->langList = $this->cache->getOrSet('langList', function () use ($langRepo) {
+            return $langRepo->findBy(['active' => 1]);
         });
     }
 
@@ -49,6 +49,7 @@ class LangService
 
     private function resolveLangFromCookie(): string
     {
+
         $request = $this->requestStack->getCurrentRequest();
         if (!$request) {
             return $this->getDefault();
@@ -90,7 +91,7 @@ class LangService
 
     public function getDefault(): string
     {
-        return $this->default->getLangsCode();
+        return $this->default->getCode();
     }
 
     public function getLangs(): array

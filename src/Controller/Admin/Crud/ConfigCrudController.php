@@ -103,7 +103,7 @@ class ConfigCrudController extends AbstractCrudController
                 ->hideOnIndex();
             yield TextField::new('phone', $this->translateService->translateSzavak("phone"))
                 ->hideOnIndex();
-            yield TextareaField::new('schema_text'.$this->langService->getDefault(), "Schema ".$this->translateService->translateSzavak("text","text"))
+            yield TextareaField::new('schema_text', "Schema ".$this->translateService->translateSzavak("text","text"))
                 ->setFormTypeOption('row_attr', ['data-config-target' => 'schemaTextRow'])
                 ->hideOnIndex();
             yield Field::new('favicon', 'Favicon')
@@ -121,15 +121,15 @@ class ConfigCrudController extends AbstractCrudController
                 ])
                 ->onlyOnForms();
 
-        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getLangsName()));
+        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getName()));
             yield TextField::new('title_'.$this->langService->getDefault(), $this->translateService->translateSzavak("title"))->hideOnIndex();
             yield TextField::new('meta_desc_'.$this->langService->getDefault(), $this->translateService->translateSzavak("meta_desc","meta desc"))->hideOnIndex();
         
         foreach($this->langService->getLangs() as $lang){
-            if(!$lang->isLangsDefault()){
-                yield FormField::addTab($this->translateService->translateSzavak($lang->getLangsName()));
-                yield TextField::new('title_'.$lang->getLangsCode(), $this->translateService->translateSzavak("title"))->hideOnIndex();
-                yield TextField::new('meta_desc_'.$lang->getLangsCode(), $this->translateService->translateSzavak("meta_desc","meta desc"))->hideOnIndex();
+            if(!$lang->isDefault()){
+                yield FormField::addTab($this->translateService->translateSzavak($lang->getName()));
+                yield TextField::new('title_'.$lang->getCode(), $this->translateService->translateSzavak("title"))->hideOnIndex();
+                yield TextField::new('meta_desc_'.$lang->getCode(), $this->translateService->translateSzavak("meta_desc","meta desc"))->hideOnIndex();
             }
         }
     }

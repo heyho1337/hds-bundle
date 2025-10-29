@@ -1,0 +1,16 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{# Remove the outer label completely by making `form_label` empty when no "for" attribute or for root field #}
+{% block form_label %}
+    {# Only render label if it has a "for" attribute (inner inputs) #}
+    {% if label %}
+        <label for="{{ id }}">{{ label }}</label>
+    {% endif %}
+{% endblock %}
+
+{# Render only one wrapper div with your custom class and id #}
+{% block form_row %}
+    {{ form_label(form) }}
+    {{ form_widget(form) }}
+    {{ form_errors(form) }}
+{% endblock %}

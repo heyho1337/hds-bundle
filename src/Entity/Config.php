@@ -63,6 +63,14 @@ class Config
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $schema_text = null;
 
+    #[ORM\Column]
+    private ?bool $multilang = null;
+
+    public function __construct()
+    {
+        
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -268,6 +276,18 @@ class Config
     public function setSchemaText(?string $schema_text): static
     {
         $this->schema_text = $schema_text;
+
+        return $this;
+    }
+
+    public function isMultilang(): ?bool
+    {
+        return $this->multilang;
+    }
+
+    public function setMultilang(bool $multilang): static
+    {
+        $this->multilang = $multilang;
 
         return $this;
     }

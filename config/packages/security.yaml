@@ -1,55 +1,77 @@
-# config/packages/security.yaml
-
 security:
-    # Password Hasher Configuration
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
-    # User Provider (used for admin login)
     providers:
         app_user_provider:
             entity:
                 class: App\Entity\User
                 property: email
 
-    # Firewalls
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        # API firewall using custom API key authenticator
         api:
             pattern: ^/api
             stateless: true
             custom_authenticator: App\Security\ApiKeyAuthenticator
 
-        # Main firewall for admin UI etc.
-        main:
+        # Admin firewall - strictly for /admin
+        admin:
+            pattern: ^/admin
             lazy: true
             stateless: false
             provider: app_user_provider
-            custom_authenticator: App\Security\UserAuthenticator
             entry_point: form_login
 
             form_login:
-                login_path: app_login
-                check_path: app_login
+                login_path: admin_login        # e.g. route for /admin/login
+                check_path: admin_login        # must match login_path route name
                 default_target_path: /admin
                 enable_csrf: true
 
             logout:
-                path: app_logout
-                target: app_login
+                path: admin_logout             # route handling admin logout
+                target: admin_login
 
-            remember_me:
-                secret: '%kernel.secret%'
-                lifetime: 604800
-                path: /
+            custom_authenticators:
+                - App\Security\UserAuthenticator
+                - App\Security\GoogleAuth
 
-    # Access Control Rules
+        # Setup firewall - strictly for /setup
+        setup:
+            pattern: ^/setup
+            lazy: true
+            stateless: false
+            provider: app_user_provider
+            entry_point: form_login
+
+            form_login:
+                login_path: setup_login
+                check_path: setup_login
+                default_target_path: /setup
+                enable_csrf: true
+
+            logout:
+                path: setup_logout
+                target: setup_login
+
+            custom_authenticators:
+                - App\Security\SetupAuthenticator
+                - App\Security\GoogleAuth
+
     access_control:
-        - { path: ^/login, roles: PUBLIC_ACCESS }       # Public login page
-        - { path: ^/admin, roles: ROLE_ADMIN }          # Admin pages restricted to ROLE_ADMIN only
-        #- { path: ^/api, roles: ROLE_API }               # API access limited to authenticated API key users
-        - { path: ^/api, roles: PUBLIC_ACCESS }  
+        # Setup access control
+        - { path: ^/setup/registration, roles: PUBLIC_ACCESS }
+        - { path: ^/setup/login, roles: PUBLIC_ACCESS }
+        - { path: ^/setup, roles: ROLE_SETUP }
+
+        # Admin access control
+        - { path: ^/admin/login, roles: PUBLIC_ACCESS }
+        - { path: ^/admin, roles: ROLE_ADMIN }
+
+        # API (optional)
+        #- { path: ^/api, roles: ROLE_API }
+        - { path: ^/api, roles: PUBLIC_ACCESS }

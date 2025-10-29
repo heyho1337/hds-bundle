@@ -8,6 +8,8 @@ use App\Entity\Szavak;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Modules\LangService;
 use App\Repository\SzavakRepository;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Intl\Languages;
 
 class TranslateService
 {
@@ -19,10 +21,44 @@ class TranslateService
         private readonly GoogleTranslate $translate,
         private readonly LangService $langService,
         private readonly SzavakRepository $szavakRepo,
-        private CacheService $cache
+        private CacheService $cache,
+        private ParameterBagInterface $params
     ) {
         $this->source = $this->langService->getDefault();
         $this->translate->setSource($this->source);
+    }
+
+    public function getEasyAdminAvailableLangs(): array
+    {
+        $dir = __DIR__ . '/../../../vendor/easycorp/easyadmin-bundle/translations';
+        $pattern = $dir . '/EasyAdminBundle.*.php';
+        $files = glob($pattern);
+
+        $langs = [];
+        foreach ($files as $file) {
+            // Extract the language code from the filename (e.g., "EasyAdminBundle.en.php" => "en")
+            if (preg_match('/EasyAdminBundle\.([a-zA-Z\-_]+)\.php$/', $file, $matches)) {
+                $langs[] = $matches[1];
+            }
+        }
+        return $langs; // ['en', 'de', ...]
+    }
+
+    public function getAvailableLangs(): array
+    {
+        $easyAdminLangs = $this->getEasyAdminAvailableLangs(); // ['en', 'de', ...]
+        $googleLangs = $this->translate->languages(); // ['en', 'de', ...]
+
+        $choices = [];
+        foreach ($easyAdminLangs as $code) {
+            if (in_array($code, $googleLangs, true)) {
+                // Use Symfony Intl to get readable language name
+                // Default to $code if name not found
+                $langName = \Symfony\Component\Intl\Languages::getName($code, 'en') ?? $code;
+                $choices[$langName] = $code;
+            }
+        }
+        return $choices;
     }
 
     public function setLangs(string $target): void
@@ -41,8 +77,8 @@ class TranslateService
             $newWord->setSzavakCode($code);
 
             foreach($this->langService->getLangs() as $lang){
-                $szavakMethod = "setSzavak".ucfirst($lang->getLangsCode());
-                $this->translate->setTarget($lang->getLangsCode());
+                $szavakMethod = "setSzavak".ucfirst($lang->getCode());
+                $this->translate->setTarget($lang->getCode());
                 if($value != ''){
                     $translatedValue = $this->translate->translate($value);
                 }
@@ -58,9 +94,17 @@ class TranslateService
             $this->entityManager->persist($newWord);
             $this->entityManager->flush();
 
-            $szavak = $this->cache->getFromCache('szavak_list_',$lang->getLangsCode(), function() {
-                return $this->szavakRepo->findAll();
-            });
+            foreach ($this->langService->getLangs() as $lang) {
+                $langCode = $lang->getCode();
+                $cacheKey = 'szavak:' . $langCode;
+                
+                // Delete old cache key
+                $this->cache->delete($cacheKey);
+                
+                // Repopulate cache immediately
+                $freshSzavak = $this->szavakRepo->findAll();
+                $this->cache->set($cacheKey, $freshSzavak);
+            }
 
             return ucfirst($translatedValue);
         }
@@ -105,8 +149,8 @@ class TranslateService
         $reflection = new \ReflectionObject($entity);
 
         foreach($this->langService->getLangs() as $lang){
-            if($lang->getLangsCode() !== $this->source){
-                $langCode = $lang->getLangsCode();
+            if($lang->getCode() !== $this->source){
+                $langCode = $lang->getCode();
                 $this->translate->setTarget($langCode);
                 foreach ($reflection->getProperties() as $property) {
                     $name = $property->getName();
@@ -118,7 +162,17 @@ class TranslateService
                         if(!$localizedValue){
                             $fallbackProperty = $reflection->getProperty($base."_".$this->source);
                             if($fallbackProperty->getValue($entity)){
-                                $localizedValue = $this->translate->translate($fallbackProperty->getValue($entity));
+                                if(is_array($fallbackProperty->getValue($entity))){
+                                    $newOptions = [];
+                                    foreach($fallbackProperty->getValue($entity) as $item){
+                                        $tranlatedItem = $this->translate->translate($item);
+                                        array_push($newOptions,$tranlatedItem);
+                                    }
+                                    $localizedValue = $newOptions;
+                                }
+                                else{
+                                    $localizedValue = $this->translate->translate($fallbackProperty->getValue($entity));
+                                }
                                 $property->setValue($entity,$localizedValue);
                                 $this->entityManager->persist($entity);
                                 $this->entityManager->flush();
@@ -143,6 +197,7 @@ class TranslateService
                 }
             }
         }
+        $key = strtolower($reflection->getShortName()).":";
+        $this->cache->deleteByPattern($key);
     }
-
 }

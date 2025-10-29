@@ -1,0 +1,13 @@
+<form method="post" action="{{ path('admin_login') }}">
+    {% if app.session.flashBag.has('error') %}
+        <div class="alert alert-danger">
+            {{ app.session.flashBag.get('error')[0] }}
+        </div>
+    {% endif %}
+
+    <input type="email" name="email" value="{{ last_username }}" required autofocus>
+    <input type="password" name="password" required>
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+    <button type="submit">Login</button>
+</form>
