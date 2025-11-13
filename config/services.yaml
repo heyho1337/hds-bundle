@@ -49,9 +49,3 @@ services:
         factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
         arguments:
             - '%env(REDIS_URL)%'
-    App\Command\AdminProcessSetupCommand:
-        arguments:
-            $entityManagerNewDb: '@doctrine.orm.newdb_entity_manager'
-    App\Command\UserProcessSetupCommand:
-        arguments:
-            $entityManagerNewDb: '@doctrine.orm.newdb_entity_manager'
