@@ -63,7 +63,7 @@ class ImageUploadController extends AbstractController
                 throw new \RuntimeException('Error processing images or saving slides: ' . $ex->getMessage(), 0, $ex);
             }
 
-            $this->addFlash('success', $this->translateService->translateSzavak("success_upload","Slides uploaded successfully"));
+            $this->addFlash('success', $this->translateService->translateWords("success_upload","Slides uploaded successfully"));
 
             //return $this->redirectToRoute('admin_slide_index');
         }

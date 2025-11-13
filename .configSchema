@@ -1,0 +1,30 @@
+/*
+            [
+                "basic" => [
+                    "schema" => ["ROLE_ADMIN,"ROLE_SUPER_ADMIN"],
+                    "config" => ["ROLE_ADMIN,"ROLE_SUPER_ADMIN"],
+                    "user" => ["ROLE_ADMIN,"ROLE_SUPER_ADMIN"],
+                ],
+                "menu" => [
+                    "menu" => true,
+                    "menu_position" => ["ROLE_SUPER_ADMIN"],
+                    "menu_target" => ["ROLE_SUPER_ADMIN"],
+                    "menu_type" => ["ROLE_SUPER_ADMIN"],
+                ]
+                "blog" => [
+                    "category" => true,
+                    "blog" => true,
+                    "tag" => true,
+                ],
+                "content" => [
+                    "article" => true,
+                    "accordion" => true,
+                    "form" => true,
+                    "form_type" => ["ROLE_SUPER_ADMIN"],
+                ],
+                "images" => [
+                    "slide" => true,
+                    "gallery => true",
+                ],
+            ]
+        */

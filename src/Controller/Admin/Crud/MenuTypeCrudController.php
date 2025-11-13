@@ -48,23 +48,39 @@ class MenuTypeCrudController extends AbstractCrudController
         /**
          * on forms
          */
-        yield FormField::addTab($this->translateService->translateSzavak("options"));
-            yield TextField::new('service', $this->translateService->translateSzavak("service"))
+        yield FormField::addTab($this->translateService->translateWords("options"));
+            yield TextField::new('service', $this->translateService->translateWords("service"))
                 ->hideOnIndex();
-            yield BooleanField::new('active',$this->translateService->translateSzavak("active"))
+            yield BooleanField::new('active',$this->translateService->translateWords("active"))
                 ->renderAsSwitch(true)
                 ->setFormTypeOptions(['data' => true])
                 ->onlyOnForms();
 
-
-        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getLangsName()));
-            yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
+        // ✅ Default language tab - use custom getter/setter
+        yield FormField::addTab($this->translateService->translateWords($this->langService->getDefaultObject()->getName()));
+            yield TextField::new('name', $this->translateService->translateWords("name"))
+                ->setFormTypeOption('getter', function(MenuType $entity) {
+                    return $entity->getName($this->langService->getDefault());
+                })
+                ->setFormTypeOption('setter', function(MenuType &$entity, $value) {
+                    $entity->setName($value, $this->langService->getDefault());
+                })
                 ->hideOnIndex();
 
+        // ✅ Other language tabs - use custom getter/setter for each
         foreach($this->langService->getLangs() as $lang){
-            if(!$lang->isLangsDefault()){
-                yield FormField::addTab($this->translateService->translateSzavak($lang->getLangsName()));
-                yield TextField::new('name_'.$lang->getLangsCode(), $this->translateService->translateSzavak("name"))
+            if(!$lang->isDefault()){
+                $langCode = $lang->getCode();
+                
+                yield FormField::addTab($this->translateService->translateWords($lang->getName()));
+                
+                yield TextField::new('name_' . $langCode, $this->translateService->translateWords("name"))
+                    ->setFormTypeOption('getter', function(MenuType $entity) use ($langCode) {
+                        return $entity->getName($langCode);
+                    })
+                    ->setFormTypeOption('setter', function(MenuType &$entity, $value) use ($langCode) {
+                        $entity->setName($value, $langCode);
+                    })
                     ->hideOnIndex();
             }
         }
@@ -72,23 +88,26 @@ class MenuTypeCrudController extends AbstractCrudController
         /**
          * index
          */
-        yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
-            ->formatValue(function ($value, $entity) {
+        yield TextField::new('name', $this->translateService->translateWords("name"))
+            ->formatValue(function ($value, MenuType $entity) {
+                $default = $this->langService->getDefault();
+                $name = $entity->getName($default);
+                
                 $url = $this->adminUrlGenerator
                     ->setController(self::class)
                     ->setAction('edit')
                     ->setEntityId($entity->getId())
                     ->generateUrl();
 
-                return sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($value));
+                return sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($name));
             })
             ->onlyOnIndex()
             ->renderAsHtml();
-        yield TextField::new('service', $this->translateService->translateSzavak("service"))
+        yield TextField::new('service', $this->translateService->translateWords("service"))
                 ->hideOnForm();
-        yield DateField::new('created_at', $this->translateService->translateSzavak("created_at", "created"))->hideOnForm();
-        yield DateField::new('modified_at',$this->translateService->translateSzavak("modified_at", "modified"))->hideOnForm();
-        yield BooleanField::new('active', $this->translateService->translateSzavak("active"))
+        yield DateField::new('created_at', $this->translateService->translateWords("created_at", "created"))->hideOnForm();
+        yield DateField::new('modified_at',$this->translateService->translateWords("modified_at", "modified"))->hideOnForm();
+        yield BooleanField::new('active', $this->translateService->translateWords("active"))
             ->renderAsSwitch(true)
             ->onlyOnIndex();
     }

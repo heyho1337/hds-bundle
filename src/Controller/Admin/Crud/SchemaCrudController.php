@@ -14,15 +14,31 @@ use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use App\Service\Modules\TranslateService;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SchemaCrudController extends AbstractCrudController
 {
+    private string $lang;
+
     public function __construct(
         private readonly AdminUrlGenerator $adminUrlGenerator,
         private readonly CrudService $crudService,
         private readonly LangService $langService,
         private readonly TranslateService $translateService,
-    ) {}
+        private readonly RequestStack $requestStack,
+        private readonly TranslatorInterface $translator,
+    ) {
+        $this->lang = $this->langService->getDefault();
+        if($this->requestStack->getCurrentRequest()){
+            $locale = $this->requestStack->getCurrentRequest()->getSession()->get('_locale');
+            if($locale){
+                $this->lang = $this->requestStack->getCurrentRequest()->getSession()->get('_locale');
+                $this->translateService->setLangs($this->lang);
+                $this->langService->setLang($this->lang);
+            }
+        }
+    }
     
     public static function getEntityFqcn(): string
     {
@@ -45,26 +61,46 @@ class SchemaCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
+        $this->getContext()->getRequest()->setLocale($this->lang);
+        $this->translator->getCatalogue($this->lang);
+        $this->translator->setLocale($this->lang);
+        
         /**
          * on forms
          */
-        yield FormField::addTab($this->translateService->translateSzavak("options"));
-            yield TextField::new('code', $this->translateService->translateSzavak("code"))
+        yield FormField::addTab($this->translateService->translateWords("options"));
+            yield TextField::new('code', $this->translateService->translateWords("code"))
                 ->hideOnIndex();
-            yield BooleanField::new('active',$this->translateService->translateSzavak("active"))
+            yield BooleanField::new('active',$this->translateService->translateWords("active"))
                 ->renderAsSwitch(true)
                 ->setFormTypeOptions(['data' => true])
                 ->onlyOnForms();
 
-
-        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getLangsName()));
-            yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
+        // ✅ Default language tab - use custom getter/setter
+        yield FormField::addTab($this->translateService->translateWords($this->langService->getDefaultObject()->getName()));
+            yield TextField::new('name', $this->translateService->translateWords("name"))
+                ->setFormTypeOption('getter', function(Schema $entity) {
+                    return $entity->getName($this->langService->getDefault());
+                })
+                ->setFormTypeOption('setter', function(Schema &$entity, $value) {
+                    $entity->setName($value, $this->langService->getDefault());
+                })
                 ->hideOnIndex();
 
+        // ✅ Other language tabs - use custom getter/setter for each
         foreach($this->langService->getLangs() as $lang){
-            if(!$lang->isLangsDefault()){
-                yield FormField::addTab($this->translateService->translateSzavak($lang->getLangsName()));
-                yield TextField::new('name_'.$lang->getLangsCode(), $this->translateService->translateSzavak("name"))
+            if(!$lang->isDefault()){
+                $langCode = $lang->getCode();
+                
+                yield FormField::addTab($this->translateService->translateWords($lang->getName()));
+                
+                yield TextField::new('name_' . $langCode, $this->translateService->translateWords("name"))
+                    ->setFormTypeOption('getter', function(Schema $entity) use ($langCode) {
+                        return $entity->getName($langCode);
+                    })
+                    ->setFormTypeOption('setter', function(Schema &$entity, $value) use ($langCode) {
+                        $entity->setName($value, $langCode);
+                    })
                     ->hideOnIndex();
             }
         }
@@ -72,23 +108,26 @@ class SchemaCrudController extends AbstractCrudController
         /**
          * index
          */
-        yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
-            ->formatValue(function ($value, $entity) {
+        yield TextField::new('name', $this->translateService->translateWords("name"))
+            ->formatValue(function ($value, Schema $entity) {
+                $default = $this->langService->getDefault();
+                $name = $entity->getName($default);
+                
                 $url = $this->adminUrlGenerator
                     ->setController(self::class)
                     ->setAction('edit')
                     ->setEntityId($entity->getId())
                     ->generateUrl();
 
-                return sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($value));
+                return sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($name));
             })
             ->onlyOnIndex()
             ->renderAsHtml();
-        yield TextField::new('code', $this->translateService->translateSzavak("code"))
+        yield TextField::new('code', $this->translateService->translateWords("code"))
                 ->hideOnForm();
-        yield DateField::new('created_at', $this->translateService->translateSzavak("created_at", "created"))->hideOnForm();
-        yield DateField::new('modified_at',$this->translateService->translateSzavak("modified_at", "modified"))->hideOnForm();
-        yield BooleanField::new('active', $this->translateService->translateSzavak("active"))
+        yield DateField::new('created_at', $this->translateService->translateWords("created_at", "created"))->hideOnForm();
+        yield DateField::new('modified_at',$this->translateService->translateWords("modified_at", "modified"))->hideOnForm();
+        yield BooleanField::new('active', $this->translateService->translateWords("active"))
             ->renderAsSwitch(true)
             ->onlyOnIndex();
     }

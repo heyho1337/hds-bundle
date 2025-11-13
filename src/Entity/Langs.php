@@ -12,102 +12,102 @@ class Langs
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $langs_id = null;
+    private ?int $id = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $langs_name = null;
+    private ?string $name = null;
 
     #[ORM\Column(length: 50, nullable: true)]
-    private ?string $langs_leiras = null;
+    private ?string $description = null;
+
+    #[ORM\Column(name: "is_default", type: "boolean")]
+    private ?bool $default = null;
 
     #[ORM\Column]
-    private ?bool $langs_default = null;
-
-    #[ORM\Column]
-    private ?bool $langs_aktiv = null;
+    private ?bool $active = null;
 
     #[ORM\Column(length: 2)]
-    private ?string $langs_code = null;
+    private ?string $code = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $langs_flag = null;
+    private ?string $flag = null;
 
     #[ORM\Column]
     private ?int $langs_sort = null;
 
     public function getId(): ?int
     {
-        return $this->langs_id;
+        return $this->id;
     }
 
-    public function getLangsName(): ?string
+    public function getName(): ?string
     {
-        return $this->langs_name;
+        return $this->name;
     }
 
-    public function setLangsName(string $langs_name): static
+    public function setName(string $name): static
     {
-        $this->langs_name = $langs_name;
+        $this->name = $name;
 
         return $this;
     }
 
-    public function getLangsLeiras(): ?string
+    public function getDescription(): ?string
     {
-        return $this->langs_leiras;
+        return $this->description;
     }
 
-    public function setLangsLeiras(?string $langs_leiras): static
+    public function setDescription(?string $description): static
     {
-        $this->langs_leiras = $langs_leiras;
+        $this->description = $description;
 
         return $this;
     }
 
-    public function isLangsDefault(): ?bool
+    public function isDefault(): ?bool
     {
-        return $this->langs_default;
+        return $this->default;
     }
 
-    public function setLangsDefault(bool $langs_default): static
+    public function setDefault(bool $default): static
     {
-        $this->langs_default = $langs_default;
+        $this->default = $default;
 
         return $this;
     }
 
-    public function isLangsAktiv(): ?bool
+    public function isActive(): ?bool
     {
-        return $this->langs_aktiv;
+        return $this->active;
     }
 
-    public function setLangsAktiv(bool $langs_aktiv): static
+    public function setActive(bool $active): static
     {
-        $this->langs_aktiv = $langs_aktiv;
+        $this->active = $active;
 
         return $this;
     }
 
-    public function getLangsCode(): ?string
+    public function getCode(): ?string
     {
-        return $this->langs_code;
+        return $this->code;
     }
 
-    public function setLangsCode(string $langs_code): static
+    public function setCode(string $code): static
     {
-        $this->langs_code = $langs_code;
+        $this->code = $code;
 
         return $this;
     }
 
-    public function getLangsFlag(): ?string
+    public function getFlag(): ?string
     {
-        return $this->langs_flag;
+        return $this->flag;
     }
 
-    public function setLangsFlag(?string $langs_flag): static
+    public function setFlag(?string $flag): static
     {
-        $this->langs_flag = $langs_flag;
+        $this->flag = $flag;
 
         return $this;
     }

@@ -1,0 +1,14 @@
+<div class="modal fade" tabindex="-1" aria-hidden="true" data-frontend--modal-target="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <turbo-frame 
+                id="modal" 
+                class="modal-body" 
+                data-action="submit->frontend--modal#submitForm"
+                data-frontend--modal-target="modalBody"
+            >
+                {{ frame_content|default(fordito('loading', 'Loading')) }}
+            </turbo-frame>
+        </div>
+    </div>
+</div>

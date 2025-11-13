@@ -7,3 +7,5 @@ const app = startStimulusApp();
 app.register('sortable', Sortable)
 // register any custom, 3rd party controllers here
 // app.register('some_controller_name', SomeImportedController);
+
+window.app = app;

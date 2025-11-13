@@ -11,7 +11,9 @@
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
-    <body>
+    <body data-controller="frontend--modal" class="{% block body_class %}{% endblock %}">
         {% block body %}{% endblock %}
+        {% include 'frontend/modules/_modal.html.twig' %}
+        {% include 'frontend/modules/_flash.html.twig' %}
     </body>
 </html>

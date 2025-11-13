@@ -21,6 +21,10 @@ use App\Entity\MenuTarget;
 use App\Entity\MenuType;
 use App\Entity\User;
 use App\Entity\Slide;
+use App\Entity\Form;
+use App\Entity\FormType;
+use App\Repository\ComponentRepository;
+use App\Repository\ConfigRepository;
 use App\Service\Modules\LangService;
 use App\Service\Modules\TranslateService;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -31,15 +35,29 @@ use Symfony\Bundle\SecurityBundle\Security;
 class DashboardController extends AbstractDashboardController
 {
     private array $langs;
+    private Config $config;
+    private array $component;
+    private string $lang;
+
     public function __construct(
         private readonly LangService $langService,
         private readonly RequestStack $requestStack,
         private readonly RouterInterface $router,
         private readonly TranslateService $translateService,
-        private readonly Security $security
+        private readonly Security $security,
+        private readonly ConfigRepository $configRepo,
+        private readonly ComponentRepository $compRepo,
 
     ) {
-        $this->langs = $this->langService->getLangs();
+        $this->lang = $this->langService->getDefault();
+        if($this->requestStack->getCurrentRequest()){
+            $locale = $this->requestStack->getCurrentRequest()->getSession()->get('_locale');
+            if($locale){
+                $this->lang = $this->requestStack->getCurrentRequest()->getSession()->get('_locale');
+                $this->translateService->setLangs($this->lang);
+                $this->langService->setLang($this->lang);
+            }
+        }
     }
     
     public function index(): Response
@@ -55,41 +73,59 @@ class DashboardController extends AbstractDashboardController
             ->setTitle('Admin');
     }
 
+    private function hasAccess(array|null $roles): bool
+    {
+        if(is_array($roles)){
+            foreach($roles as $role) {
+                if($this->security->isGranted($role)) {
+                    return true;
+                }
+            }
+        }
+        else{
+            return true;
+        }
+        return false;
+    }
+
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::section($this->translateService->translateSzavak("basic"));
-            yield MenuItem::linkToDashboard($this->translateService->translateSzavak("dashboard"), 'fa fa-home');
-            if ($this->security->isGranted('ROLE_ADMIN') || $this->security->isGranted('ROLE_SUPER_ADMIN')) {
-                yield MenuItem::linkToCrud($this->translateService->translateSzavak("schema"), 'fa fa-tags', Schema::class);
-                yield MenuItem::linkToCrud($this->translateService->translateSzavak("config"), 'fa fa-tags', Config::class)
-                    ->setAction('edit')
-                    ->setEntityId(1);
-                yield MenuItem::linkToCrud($this->translateService->translateSzavak("user"), 'fa fa-tags', User::class);
+        $this->config = $this->configRepo->findOneBy(['id' => 1]);
+        $components = $this->compRepo->findAll();
+        foreach ($components as $component) {
+            $this->component[$component->getGroupName()][] = $component;
+        }
+
+        foreach($this->component as $group => $menuItems){
+            yield MenuItem::section($this->translateService->translateWords($group));
+            if($group === 'basic'){
+                yield MenuItem::linkToDashboard($this->translateService->translateWords("dashboard"), 'fa fa-home');
             }
-
-        yield MenuItem::section($this->translateService->translateSzavak("menu"));
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("menu","menu type"), 'fa fa-tags', Menu::class);
-            if ($this->security->isGranted('ROLE_SUPER_ADMIN')) {
-                yield MenuItem::linkToCrud($this->translateService->translateSzavak("menu_pos","menu positions"), 'fa fa-tags', MenuPosition::class);
-                yield MenuItem::linkToCrud($this->translateService->translateSzavak("menu_target","menu target"), 'fa fa-tags', MenuTarget::class);
-                yield MenuItem::linkToCrud($this->translateService->translateSzavak("menu_type","menu type"), 'fa fa-tags', MenuType::class);
+            foreach ($menuItems as $menu) {
+                $entityClass = 'App\\Entity\\' . $menu->getClass();
+                if($this->hasAccess($menu->getRole())){
+                    if($menu->getName() === 'config'){
+                        yield MenuItem::linkToCrud(
+                            $this->translateService->translateWords($menu->getName(),$menu->getLabel()), 
+                            $menu->getIcon(), 
+                            $entityClass
+                        )
+                        ->setAction('edit')
+                        ->setEntityId(1);
+                    }
+                    else{
+                        yield MenuItem::linkToCrud(
+                            $this->translateService->translateWords($menu->getName(),$menu->getLabel()), 
+                            $menu->getIcon(), 
+                            $entityClass
+                        );
+                    }
+                }
             }
+        } 
         
-        yield MenuItem::section($this->translateService->translateSzavak("blog"));
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("categories"), 'fa fa-tags', Category::class);
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("blog_posts","Blog Posts"), 'fa fa-file-text', Blog::class);
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("tags"), 'fa fa-file-text', Tag::class);
-
-        yield MenuItem::section($this->translateService->translateSzavak("content"));
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("articles"), 'fa fa-file-text', Article::class);
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("accordion"), 'fa fa-file-text', Accordion::class);
-
-        yield MenuItem::section($this->translateService->translateSzavak("images"));
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("slide"), 'fa fa-panorama', Slide::class);
-            yield MenuItem::linkToCrud($this->translateService->translateSzavak("gallery"), 'fa fa-panorama', Gallery::class);
-        
-        if ($this->security->isGranted('ROLE_SUPER_ADMIN')) {   
-            yield MenuItem::section($this->translateService->translateSzavak("languages"));
+        if ($this->security->isGranted('ROLE_SUPER_ADMIN') && $this->config->isMultilang()) {   
+            yield MenuItem::section($this->translateService->translateWords("languages"));
                 $request = $this->requestStack->getCurrentRequest();
                 $routeName = $request->attributes->get('_route');
                 $routeParams = $request->attributes->get('_route_params', []);
@@ -101,16 +137,16 @@ class DashboardController extends AbstractDashboardController
                 $this->router->getContext()->setParameter('_locale', null);
                 
                 foreach ($this->langs as $locale) {
-                    $params = array_merge($routeParams, ['_locale' => $locale->getLangsCode()]);
+                    $params = array_merge($routeParams, ['_locale' => $locale->getCode()]);
                     $url = $this->router->generate($routeName, $params);
 
                     // If default locale and _locale is missing, append manually
-                    if ($locale->getLangsCode() === $this->langService->getDefault() && strpos($url, '_locale=') === false) {
+                    if ($locale->getCode() === $this->langService->getDefault() && strpos($url, '_locale=') === false) {
                         $url .= (strpos($url, '?') === false ? '?' : '&') . '_locale='.$this->langService->getDefault();
                     }
 
                     yield MenuItem::linkToUrl(
-                        $this->translateService->translateSzavak($locale->getLangsCode()."_desc",$locale->getLangsName()),
+                        $this->translateService->translateWords($locale->getCode()."_desc",$locale->getName()),
                         'fa fa-globe',
                         $url
                     );

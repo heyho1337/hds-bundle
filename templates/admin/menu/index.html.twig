@@ -80,9 +80,9 @@
     {{ macros.renderHeader(entities|first.fields, batch_actions) }}
 
     {# Render nested menu tree below header #}
-    <div data-controller="menu-sortable" 
-         data-menu-sortable-resource-name-value="menu" 
-         data-menu-sortable-param-name-value="order_num" 
+    <div data-controller="admin--menu-sortable" 
+         data-admin--menu-sortable-resource-name-value="menu" 
+         data-admin--menu-sortable-param-name-value="order_num" 
          class="menu-tree">
         {# Step 1: Flatten all menus #}
         {% set menusById = {} %}

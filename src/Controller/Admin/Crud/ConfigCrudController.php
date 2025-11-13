@@ -25,10 +25,8 @@ use App\Service\Modules\TranslateService;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-
 class ConfigCrudController extends AbstractCrudController
 {
-
     private string $lang;
 
     public function __construct(
@@ -76,7 +74,7 @@ class ConfigCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        Category::setCurrentLang($this->lang);
+        
         $this->getContext()->getRequest()->setLocale($this->lang);
         $this->translator->getCatalogue($this->lang);
         $this->translator->setLocale($this->lang);
@@ -84,26 +82,26 @@ class ConfigCrudController extends AbstractCrudController
         /**
          * on forms
          */
-        yield FormField::addTab($this->translateService->translateSzavak("options"));
-            yield AssociationField::new('schema_type', "Schema ".$this->translateService->translateSzavak("schema_type",'type'))
-                ->setRequired(true)
+        yield FormField::addTab($this->translateService->translateWords("options"));
+            yield AssociationField::new('schema_type', "Schema ".$this->translateService->translateWords("schema_type",'type'))
+                ->setRequired(false)
                 ->autocomplete()
                 ->hideOnIndex()
                 ->setFormTypeOption('attr', [
                     'data-config-target' => 'typeField',
                     'data-action' => 'change->config#changeType'
                 ]);
-            yield TextField::new('email', $this->translateService->translateSzavak("email"))
+            yield TextField::new('email', $this->translateService->translateWords("email"))
                 ->hideOnIndex();
-            yield TextField::new('address', $this->translateService->translateSzavak("address"))
+            yield TextField::new('address', $this->translateService->translateWords("address"))
                 ->hideOnIndex();
-            yield TextField::new('city', $this->translateService->translateSzavak("city"))
+            yield TextField::new('city', $this->translateService->translateWords("city"))
                 ->hideOnIndex();
-            yield TextField::new('zip_code', $this->translateService->translateSzavak("zip_code", "zip code"))
+            yield TextField::new('zip_code', $this->translateService->translateWords("zip_code", "zip code"))
                 ->hideOnIndex();
-            yield TextField::new('phone', $this->translateService->translateSzavak("phone"))
+            yield TextField::new('phone', $this->translateService->translateWords("phone"))
                 ->hideOnIndex();
-            yield TextareaField::new('schema_text'.$this->langService->getDefault(), "Schema ".$this->translateService->translateSzavak("text","text"))
+            yield TextareaField::new('schema_text', "Schema ".$this->translateService->translateWords("text","text"))
                 ->setFormTypeOption('row_attr', ['data-config-target' => 'schemaTextRow'])
                 ->hideOnIndex();
             yield Field::new('favicon', 'Favicon')
@@ -121,15 +119,49 @@ class ConfigCrudController extends AbstractCrudController
                 ])
                 ->onlyOnForms();
 
-        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getLangsName()));
-            yield TextField::new('title_'.$this->langService->getDefault(), $this->translateService->translateSzavak("title"))->hideOnIndex();
-            yield TextField::new('meta_desc_'.$this->langService->getDefault(), $this->translateService->translateSzavak("meta_desc","meta desc"))->hideOnIndex();
+        // ✅ Default language tab - use custom getter/setter
+        yield FormField::addTab($this->translateService->translateWords($this->langService->getDefaultObject()->getName()));
+            yield TextField::new('title', $this->translateService->translateWords("title"))
+                ->setFormTypeOption('getter', function(Config $entity) {
+                    return $entity->getTitle($this->langService->getDefault());
+                })
+                ->setFormTypeOption('setter', function(Config &$entity, $value) {
+                    $entity->setTitle($value, $this->langService->getDefault());
+                })
+                ->hideOnIndex();
+            yield TextField::new('meta_desc', $this->translateService->translateWords("meta_desc","meta desc"))
+                ->setFormTypeOption('getter', function(Config $entity) {
+                    return $entity->getMetaDesc($this->langService->getDefault());
+                })
+                ->setFormTypeOption('setter', function(Config &$entity, $value) {
+                    $entity->setMetaDesc($value, $this->langService->getDefault());
+                })
+                ->hideOnIndex();
         
+        // ✅ Other language tabs - use custom getter/setter for each
         foreach($this->langService->getLangs() as $lang){
-            if(!$lang->isLangsDefault()){
-                yield FormField::addTab($this->translateService->translateSzavak($lang->getLangsName()));
-                yield TextField::new('title_'.$lang->getLangsCode(), $this->translateService->translateSzavak("title"))->hideOnIndex();
-                yield TextField::new('meta_desc_'.$lang->getLangsCode(), $this->translateService->translateSzavak("meta_desc","meta desc"))->hideOnIndex();
+            if(!$lang->isDefault()){
+                $langCode = $lang->getCode();
+                
+                yield FormField::addTab($this->translateService->translateWords($lang->getName()));
+                
+                yield TextField::new('title_' . $langCode, $this->translateService->translateWords("title"))
+                    ->setFormTypeOption('getter', function(Config $entity) use ($langCode) {
+                        return $entity->getTitle($langCode);
+                    })
+                    ->setFormTypeOption('setter', function(Config &$entity, $value) use ($langCode) {
+                        $entity->setTitle($value, $langCode);
+                    })
+                    ->hideOnIndex();
+                    
+                yield TextField::new('meta_desc_' . $langCode, $this->translateService->translateWords("meta_desc","meta desc"))
+                    ->setFormTypeOption('getter', function(Config $entity) use ($langCode) {
+                        return $entity->getMetaDesc($langCode);
+                    })
+                    ->setFormTypeOption('setter', function(Config &$entity, $value) use ($langCode) {
+                        $entity->setMetaDesc($value, $langCode);
+                    })
+                    ->hideOnIndex();
             }
         }
     }

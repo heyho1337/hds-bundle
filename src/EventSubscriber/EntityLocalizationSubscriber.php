@@ -13,19 +13,20 @@ class EntityLocalizationSubscriber
     private string $target;
 
     private array $entitiesToLocalize = [
-        'Szavak','Category','Tag','Blog','Accordion','AccordionItem','Gallery','GalleryImage','Article','Slide'
+        'Words', 'Category', 'Tag', 'Blog', 'Accordion', 'AccordionItem', 
+        'Gallery', 'GalleryImage', 'Article', 'Slide', 'Form', 'FormInput', 
+        'FormType', 'Menu', 'MenuPosition', 'MenuTarget', 'MenuType', 
+        'Schema', 'Config', 'Words'
     ];
 
     public function __construct(
         private readonly RequestStack $requestStack,
-    )
-    {
+    ) {
         $this->target = $this->resolveLangFromCookie();
     }
 
     public function __invoke(PostLoadEventArgs $args): void
     {
-        //dump("postLoad called");
         $entity = $args->getObject();
         if (!$this->shouldAutoLocalize($entity)) {
             return;
@@ -63,32 +64,13 @@ class EntityLocalizationSubscriber
     public function localizeEntity(object $entity): void
     {
         $reflection = new \ReflectionObject($entity);
-                foreach ($reflection->getProperties() as $property) {
-                    $name = $property->getName();
-                    
-                    // Match fields ending with _{lang}, e.g., name_en
-                    if (preg_match('/^(.*)_' . $this->target . '$/', $name, $matches)) {
-                        $base = $matches[1];
-                        $property->setAccessible(true);
-                        $localizedValue = $property->getValue($entity);
+        
+        foreach ($reflection->getProperties() as $property) {
+            $name = $property->getName();
 
-
-                        //dd($property,$this->target);
-                        // Preferred: use setter, e.g., setName()
-                        $setter = 'set' . ucfirst($base);
-                        if (method_exists($entity, $setter)) {
-                            $entity->$setter($localizedValue);
-                        } elseif ($reflection->hasProperty($base)) {
-                            // Fallback: set base property directly, e.g., $name
-                            $baseProperty = $reflection->getProperty($base);
-                            $baseProperty->setAccessible(true);
-                            $baseProperty->setValue($entity, $localizedValue);
-                        } else {
-                            // Fallback: dynamic property assignment
-                            $entity->$base = $localizedValue;
-                        }
-                    }
-                }
+            if($name === 'currentLang'){
+                $property->setValue($this->resolveLangFromCookie());
+            }
+        }
     }
-
 }

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SchemaRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SchemaRepository::class)]
@@ -16,13 +17,9 @@ class Schema
 
     private static string $currentLang = 'en';
 
-    private ?string $name = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_hu = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_en = null;
+    // JSON translation storage
+    #[ORM\Column(type: Types::JSON)]
+    private array $name = [];
 
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
@@ -36,44 +33,39 @@ class Schema
     #[ORM\Column]
     private ?bool $active = null;
 
+    public function __construct()
+    {
+        $this->name = [];
+    }
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getName(): ?string
+    // Smart getters/setters
+    public function getName(?string $lang = null): ?string
+    {
+        $lang = $lang ?? self::$currentLang;
+        return $this->name[$lang] ?? $this->name['en'] ?? null;
+    }
+
+    public function setName(?string $value, ?string $lang = null): static
+    {
+        $lang = $lang ?? self::$currentLang;
+        $this->name[$lang] = $value;
+        return $this;
+    }
+
+    // Methods to get/set all translations
+    public function getNameTranslations(): array
     {
         return $this->name;
     }
 
-    public function setName(?string $name): static
+    public function setNameTranslations(array $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getNameHu(): ?string
-    {
-        return $this->name_hu;
-    }
-
-    public function setNameHu(?string $name_hu): static
-    {
-        $this->name_hu = $name_hu;
-
-        return $this;
-    }
-
-    public function getNameEn(): ?string
-    {
-        return $this->name_en;
-    }
-
-    public function setNameEn(?string $name_en): static
-    {
-        $this->name_en = $name_en;
-
         return $this;
     }
 
@@ -85,7 +77,6 @@ class Schema
     public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
-
         return $this;
     }
 
@@ -97,7 +88,6 @@ class Schema
     public function setModifiedAt(\DateTimeImmutable $modified_at): static
     {
         $this->modified_at = $modified_at;
-
         return $this;
     }
 
@@ -109,23 +99,7 @@ class Schema
     public function setCode(string $code): static
     {
         $this->code = $code;
-
         return $this;
-    }
-
-    public static function setCurrentLang(string $lang): void
-    {
-        self::$currentLang = $lang;
-    }
-
-    public function __toString(): string
-    {
-        $getter = 'getName' . self::$currentLang;
-        if (method_exists($this, $getter)) {
-            return (string) $this->$getter();
-        }
-
-        return '';
     }
 
     public function isActive(): ?bool
@@ -136,7 +110,21 @@ class Schema
     public function setActive(bool $active): static
     {
         $this->active = $active;
-
         return $this;
+    }
+
+    public static function setCurrentLang(string $lang): void
+    {
+        self::$currentLang = $lang;
+    }
+
+    public static function getCurrentLang(): string
+    {
+        return self::$currentLang;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getName() ?? '';
     }
 }

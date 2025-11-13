@@ -13,7 +13,7 @@
           {% for attrname, attrvalue in form.vars.attr %}
               {% if attrname != 'id' %} {{ attrname }}="{{ attrvalue }}"{% endif %}
           {% endfor %}
-          data-controller="menu-type"
+          data-controller="admin--menu-type"
           {% if form.vars.method|lower != 'get' and form.vars.method|lower != 'post' %}
               >
               <input type="hidden" name="_method" value="{{ form.vars.method }}">

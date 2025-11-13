@@ -98,10 +98,10 @@ class UserCrudController extends AbstractCrudController
         }
         
 
-        yield FormField::addTab($this->translateService->translateSzavak("options"));
-            yield TextField::new('name', $this->translateService->translateSzavak("name"))
+        yield FormField::addTab($this->translateService->translateWords("options"));
+            yield TextField::new('name', $this->translateService->translateWords("name"))
                 ->hideOnIndex();
-            yield TextField::new('name', $this->translateService->translateSzavak("name"))
+            yield TextField::new('name', $this->translateService->translateWords("name"))
                 ->formatValue(function ($value, $entity) {
                     $url = $this->adminUrlGenerator
                         ->setController(self::class)
@@ -113,25 +113,25 @@ class UserCrudController extends AbstractCrudController
                 })
                 ->onlyOnIndex()
                 ->renderAsHtml();
-            yield TextField::new('email', $this->translateService->translateSzavak("email"));
-            yield BooleanField::new('active',$this->translateService->translateSzavak("active"))
+            yield TextField::new('email', $this->translateService->translateWords("email"));
+            yield BooleanField::new('active',$this->translateService->translateWords("active"))
                 ->renderAsSwitch(true)
                 ->setFormTypeOptions(['data' => true]);
-           yield TextField::new('password', $this->translateService->translateSzavak('password'))
+           yield TextField::new('password', $this->translateService->translateWords('password'))
                 ->hideOnIndex()
                 ->setFormType(RepeatedType::class)
                 ->setFormTypeOptions([
                     'type' => PasswordType::class,
-                    'invalid_message' => $this->translateService->translateSzavak('passwords_do_not_match'),
-                    'first_options'  => ['label' => $this->translateService->translateSzavak('password')],
-                    'second_options' => ['label' => $this->translateService->translateSzavak('password_again')],
+                    'invalid_message' => $this->translateService->translateWords('passwords_do_not_match'),
+                    'first_options'  => ['label' => $this->translateService->translateWords('password')],
+                    'second_options' => ['label' => $this->translateService->translateWords('password_again')],
                     'required' => $pageName === Crud::PAGE_NEW,
                     'constraints' => $pageName === Crud::PAGE_NEW ? [$this->getPasswordConstraints()] : [],
                     'mapped' => false, // Not mapped directly, handle manually
                 ]);
             
             if ($this->security->isGranted('ROLE_ADMIN') || $this->security->isGranted('ROLE_SUPER_ADMIN')) {
-                yield ChoiceField::new('roles', $this->translateService->translateSzavak('roles'))
+                yield ChoiceField::new('roles', $this->translateService->translateWords('roles'))
                     ->setChoices($choices)
                     ->allowMultipleChoices()
                     ->hideOnIndex()
@@ -206,7 +206,7 @@ class UserCrudController extends AbstractCrudController
         }
 
         if ($plainPassword !== $repeatPassword) {
-            throw new \InvalidArgumentException($this->translateService->translateSzavak('passwords_do_not_match'));
+            throw new \InvalidArgumentException($this->translateService->translateWords('passwords_do_not_match'));
         }
 
         $violations = $this->validatePassword($plainPassword);

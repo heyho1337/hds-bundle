@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\MenuTargetRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MenuTargetRepository::class)]
@@ -15,13 +16,9 @@ class MenuTarget
 
     private static string $currentLang = 'en';
 
-    #[ORM\Column(length: 255,nullable: true)]
-    private ?string $name_hu = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_en = null;
-
-    private ?string $name = null;
+    // JSON translation storage
+    #[ORM\Column(type: Types::JSON)]
+    private array $name = [];
 
     #[ORM\Column(length: 255)]
     private ?string $target = null;
@@ -35,44 +32,39 @@ class MenuTarget
     #[ORM\Column]
     private ?bool $active = null;
 
+    public function __construct()
+    {
+        $this->name = [];
+    }
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getNameHu(): ?string
+    // Smart getters/setters
+    public function getName(?string $lang = null): ?string
     {
-        return $this->name_hu;
+        $lang = $lang ?? self::$currentLang;
+        return $this->name[$lang] ?? $this->name['en'] ?? null;
     }
 
-    public function setNameHu(string $name_hu): static
+    public function setName(?string $value, ?string $lang = null): static
     {
-        $this->name_hu = $name_hu;
-
+        $lang = $lang ?? self::$currentLang;
+        $this->name[$lang] = $value;
         return $this;
     }
 
-    public function getNameEn(): ?string
-    {
-        return $this->name_en;
-    }
-
-    public function setNameEn(?string $name_en): static
-    {
-        $this->name_en = $name_en;
-
-        return $this;
-    }
-
-    public function getName(): ?string
+    // Methods to get/set all translations
+    public function getNameTranslations(): array
     {
         return $this->name;
     }
 
-    public function setName(?string $name): static
+    public function setNameTranslations(array $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -84,7 +76,6 @@ class MenuTarget
     public function setTarget(string $target): static
     {
         $this->target = $target;
-
         return $this;
     }
 
@@ -96,7 +87,6 @@ class MenuTarget
     public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
-
         return $this;
     }
 
@@ -108,23 +98,7 @@ class MenuTarget
     public function setModifiedAt(\DateTimeImmutable $modified_at): static
     {
         $this->modified_at = $modified_at;
-
         return $this;
-    }
-
-    public static function setCurrentLang(string $lang): void
-    {
-        self::$currentLang = $lang;
-    }
-
-    public function __toString(): string
-    {
-        $getter = 'getName' . self::$currentLang;
-        if (method_exists($this, $getter)) {
-            return (string) $this->$getter();
-        }
-
-        return '';
     }
 
     public function isActive(): ?bool
@@ -135,7 +109,21 @@ class MenuTarget
     public function setActive(bool $active): static
     {
         $this->active = $active;
-
         return $this;
+    }
+
+    public static function setCurrentLang(string $lang): void
+    {
+        self::$currentLang = $lang;
+    }
+
+    public static function getCurrentLang(): string
+    {
+        return self::$currentLang;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getName() ?? '';
     }
 }

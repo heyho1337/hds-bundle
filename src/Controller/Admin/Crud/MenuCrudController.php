@@ -28,7 +28,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 
 class MenuCrudController extends AbstractCrudController
 {
-    
     private string $lang;
 
     public function __construct(
@@ -48,8 +47,6 @@ class MenuCrudController extends AbstractCrudController
                 $this->translateService->setLangs($this->lang);
                 $this->langService->setLang($this->lang);
             }
-
-            
         }
     }
     
@@ -81,15 +78,13 @@ class MenuCrudController extends AbstractCrudController
             if($entityInstance->getType()->getId() === 1 && !$entityInstance->getArticle()){
                 $article = new Article();
                 foreach($this->langService->getLangs() as $lang){
-                    $setNameMethod = "setName".ucfirst($lang->getLangsCode());
-                    $getNameMethod = "getName".ucfirst($lang->getLangsCode());
-
-                    $setTitleMethod = "setTitle".ucfirst($lang->getLangsCode());
-                    $setMetaMethod = "setMetaDesc".ucfirst($lang->getLangsCode());
-
-                    $article->$setNameMethod($entityInstance->$getNameMethod());
-                    $article->$setTitleMethod($entityInstance->$getNameMethod());
-                    $article->$setMetaMethod($entityInstance->$getNameMethod());
+                    $code = $lang->getCode();
+                    
+                    // ✅ Use getter/setter with language parameter instead of dynamic methods
+                    $name = $entityInstance->getName($code);
+                    $article->setName($name, $code);
+                    $article->setTitle($name, $code);
+                    $article->setMetaDesc($name, $code);
                 }
                 
                 $this->crudService->setEntity($entityManager, $article);
@@ -103,7 +98,6 @@ class MenuCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-        Menu::setCurrentLang($this->lang);
         $this->getContext()->getRequest()->setLocale($this->lang);
         $this->translator->getCatalogue($this->lang);
         $this->translator->setLocale($this->lang);
@@ -112,24 +106,24 @@ class MenuCrudController extends AbstractCrudController
          * on forms
          */
         
-        yield FormField::addTab($this->translateService->translateSzavak("options"));
-            yield BooleanField::new('active',$this->translateService->translateSzavak("active"))
+        yield FormField::addTab($this->translateService->translateWords("options"));
+            yield BooleanField::new('active',$this->translateService->translateWords("active"))
                 ->renderAsSwitch(true)
                 ->setFormTypeOptions(['data' => true])
                 ->onlyOnForms();
-            yield AssociationField::new('position', $this->translateService->translateSzavak("position"))
+            yield AssociationField::new('position', $this->translateService->translateWords("position"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->hideOnIndex();
-            yield AssociationField::new('target', $this->translateService->translateSzavak("target"))
+            yield AssociationField::new('target', $this->translateService->translateWords("target"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->hideOnIndex();
-            yield AssociationField::new('parent', $this->translateService->translateSzavak("parent", "parent menu"))
+            yield AssociationField::new('parent', $this->translateService->translateWords("parent", "parent menu"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->hideOnIndex();
-            yield AssociationField::new('type', $this->translateService->translateSzavak("type"))
+            yield AssociationField::new('type', $this->translateService->translateWords("type"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->setFormTypeOption('attr', [
@@ -137,27 +131,27 @@ class MenuCrudController extends AbstractCrudController
                     'data-action' => 'change->menu-type#changeType'
                 ])
                 ->hideOnIndex();
-            yield AssociationField::new('article', $this->translateService->translateSzavak("article"))
+            yield AssociationField::new('article', $this->translateService->translateWords("article"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->setFormTypeOption('row_attr', ['data-menu-type-target' => 'articleRow'])
                 ->hideOnIndex();
-            yield AssociationField::new('blog', $this->translateService->translateSzavak("blog"))
+            yield AssociationField::new('blog', $this->translateService->translateWords("blog"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->setFormTypeOption('row_attr', ['data-menu-type-target' => 'blogRow'])
                 ->hideOnIndex();
-            yield AssociationField::new('blog_category', $this->translateService->translateSzavak("blog_category", 'blog category'))
+            yield AssociationField::new('blog_category', $this->translateService->translateWords("blog_category", 'blog category'))
                 ->setRequired(false)
                 ->autocomplete()
                 ->setFormTypeOption('row_attr', ['data-menu-type-target' => 'blogCategoryRow'])
                 ->hideOnIndex();
-            yield AssociationField::new('tag', $this->translateService->translateSzavak("tag"))
+            yield AssociationField::new('tag', $this->translateService->translateWords("tag"))
                 ->setRequired(false)
                 ->autocomplete()
                 ->setFormTypeOption('row_attr', ['data-menu-type-target' => 'tagRow'])
                 ->hideOnIndex();
-            yield Field::new('file', $this->translateService->translateSzavak("file"))
+            yield Field::new('file', $this->translateService->translateWords("file"))
                 ->setFormType(FileType::class)
                 ->setFormTypeOptions([
                     'required' => false,
@@ -165,20 +159,49 @@ class MenuCrudController extends AbstractCrudController
                     'attr' => ['data-menu-type-target' => 'fileRow']
                 ])
                 ->onlyOnForms();
-            
         
-        yield FormField::addTab($this->translateService->translateSzavak($this->langService->getDefaultObject()->getLangsName()));
-            yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
+        // ✅ Default language tab - use custom getter/setter
+        yield FormField::addTab($this->translateService->translateWords($this->langService->getDefaultObject()->getName()));
+            yield TextField::new('name', $this->translateService->translateWords("name"))
+                ->setFormTypeOption('getter', function(Menu $entity) {
+                    return $entity->getName($this->langService->getDefault());
+                })
+                ->setFormTypeOption('setter', function(Menu &$entity, $value) {
+                    $entity->setName($value, $this->langService->getDefault());
+                })
                 ->hideOnIndex();
-            yield TextField::new('slug_'.$this->langService->getDefault(), $this->translateService->translateSzavak("url"))
+            yield TextField::new('slug', $this->translateService->translateWords("url"))
+                ->setFormTypeOption('getter', function(Menu $entity) {
+                    return $entity->getSlug($this->langService->getDefault());
+                })
+                ->setFormTypeOption('setter', function(Menu &$entity, $value) {
+                    $entity->setSlug($value, $this->langService->getDefault());
+                })
                 ->hideOnIndex();
 
+        // ✅ Other language tabs - use custom getter/setter for each
         foreach($this->langService->getLangs() as $lang){
-            if(!$lang->isLangsDefault()){
-                yield FormField::addTab($this->translateService->translateSzavak($lang->getLangsName()));
-                yield TextField::new('name_'.$lang->getLangsCode(), $this->translateService->translateSzavak("name"))
+            if(!$lang->isDefault()){
+                $langCode = $lang->getCode();
+                
+                yield FormField::addTab($this->translateService->translateWords($lang->getName()));
+                
+                yield TextField::new('name_' . $langCode, $this->translateService->translateWords("name"))
+                    ->setFormTypeOption('getter', function(Menu $entity) use ($langCode) {
+                        return $entity->getName($langCode);
+                    })
+                    ->setFormTypeOption('setter', function(Menu &$entity, $value) use ($langCode) {
+                        $entity->setName($value, $langCode);
+                    })
                     ->hideOnIndex();
-                yield TextField::new('slug_'.$lang->getLangsCode(), $this->translateService->translateSzavak("url"))
+                
+                yield TextField::new('slug_' . $langCode, $this->translateService->translateWords("url"))
+                    ->setFormTypeOption('getter', function(Menu $entity) use ($langCode) {
+                        return $entity->getSlug($langCode);
+                    })
+                    ->setFormTypeOption('setter', function(Menu &$entity, $value) use ($langCode) {
+                        $entity->setSlug($value, $langCode);
+                    })
                     ->hideOnIndex();
             }
         }
@@ -186,22 +209,31 @@ class MenuCrudController extends AbstractCrudController
         /**
          * index
          */
-        yield TextField::new('name_'.$this->langService->getDefault(), $this->translateService->translateSzavak("name"))
-            ->formatValue(function ($value, $entity) {
+        yield TextField::new('name', $this->translateService->translateWords("name"))
+            ->formatValue(function ($value, Menu $entity) {
+                $default = $this->langService->getDefault();
+                $name = $entity->getName($default);
+                
                 $url = $this->adminUrlGenerator
                     ->setController(self::class)
                     ->setAction('edit')
                     ->setEntityId($entity->getId())
                     ->generateUrl();
 
-                return sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($value));
+                return sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($name));
             })
             ->onlyOnIndex()
             ->renderAsHtml();
-        yield TextField::new('slug_'.$this->langService->getDefault(), $this->translateService->translateSzavak("url"))->onlyOnIndex();
-        yield DateField::new('created_at', $this->translateService->translateSzavak("created_at", "created"))->hideOnForm();
-        yield DateField::new('modified_at',$this->translateService->translateSzavak("modified_at", "modified"))->hideOnForm();
-        yield BooleanField::new('active', $this->translateService->translateSzavak("active"))
+        
+        yield TextField::new('slug', $this->translateService->translateWords("url"))
+            ->formatValue(function ($value, Menu $entity) {
+                return $entity->getSlug($this->langService->getDefault());
+            })
+            ->onlyOnIndex();
+        
+        yield DateField::new('created_at', $this->translateService->translateWords("created_at", "created"))->hideOnForm();
+        yield DateField::new('modified_at',$this->translateService->translateWords("modified_at", "modified"))->hideOnForm();
+        yield BooleanField::new('active', $this->translateService->translateWords("active"))
             ->renderAsSwitch(true)
             ->onlyOnIndex();
     }
@@ -222,13 +254,13 @@ class MenuCrudController extends AbstractCrudController
         // For 'parent' field, load all Menu entities (ignoring $searchQuery)
         if ($searchField === 'parent') {
             $qb = $this->getDoctrine()->getRepository(Menu::class)->createQueryBuilder($entityAlias);
-            $qb->orderBy("$entityAlias.name_$this->lang", 'ASC');
+            $qb->orderBy("$entityAlias.order_num", 'ASC');
             return $qb;
         }
 
-        // Default autocomplete behavior for other fields
+        // ✅ Use JSON_EXTRACT for autocomplete
         $qb = parent::createAutocompleteQueryBuilder($searchQuery, $criteria, $entityAlias, $searchField);
-        $qb->select("$entityAlias.id, $entityAlias.name_$this->lang AS label");
+        $qb->select("$entityAlias.id, JSON_UNQUOTE(JSON_EXTRACT($entityAlias.name, '$.\"{$this->lang}\"')) AS label");
 
         return $qb;
     }

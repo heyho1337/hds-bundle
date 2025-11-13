@@ -2,53 +2,69 @@
 
 namespace App\Service\Modules;
 
-use App\Entity\Szavak;
-use App\ENtity\Langs;
+use App\Entity\Words;
+use App\Entity\Langs;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\LangsRepository;
-use App\Repository\SzavakRepository;
+use App\Repository\WordsRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
+use App\Repository\EasyAdminGoogleLangsRepository;
 
 class LangService
 {
     private string $currentLang;
-    private array $szavak;
+    private array $words;
     private array $langList;
     private Langs $default;
+    private array $eagl;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly LangsRepository $langsRepo,
         private readonly RequestStack $requestStack,
-        private readonly SzavakRepository $szavakRepo,
+        private readonly WordsRepository $wordsRepo,
+        private readonly EasyAdminGoogleLangsRepository $eaglRepo,
         private CacheService $cache,
     ) {
-        $this->default = $this->cache->getFromCache('lang_default_',"0", function() {
-            return $this->langsRepo->findOneBy(['langs_aktiv' => 1, 'langs_default' => 1]);
-        });
 
+        $langRepo = $this->langsRepo;
+        
+        $this->default = $this->cache->getOrSet('default_lang', function () use ($langRepo) {
+            return $langRepo->findOneBy(['active' => 1, 'default' => 1]);
+        });
         $this->currentLang = $this->resolveLangFromCookie();
 
-        /*
-        $this->szavak = $this->cache->getFromCache('szavak_list_',$this->currentLang, function() {
-            return $this->szavakRepo->findAll();
+        $eaglsRepo = $this->eaglRepo;
+        
+        $this->eagl = $this->cache->getOrSet('eagl', function () use ($eaglsRepo) {
+            return $eaglsRepo->findAll();
         });
-        */
 
-        $this->szavak = $this->szavakRepo->findAll();
+        //$this->cache->set('words:' . $this->currentLang,$this->wordsRepo->findAll());
 
-        $this->langList = $this->cache->getFromCache('lang_list_',"0", function() {
-            return $this->langsRepo->findBy(['langs_aktiv' => 1]);
+        $repo = $this->wordsRepo;
+        $this->words = $this->cache->getOrSet('words:' . $this->currentLang, function () use ($repo) {
+            return $repo->findAll();
+        });
+
+        $this->langList = $this->cache->getOrSet('langList', function () use ($langRepo) {
+            return $langRepo->findBy(['active' => 1]);
         });
     }
 
-    public function getSzavak(): array
+    public function getWords(): array
     {
-        return $this->szavak;
+        return $this->words;
+    }
+
+    public function getEagl(): array
+    {
+        return $this->eagl;
     }
 
     private function resolveLangFromCookie(): string
     {
+
         $request = $this->requestStack->getCurrentRequest();
         if (!$request) {
             return $this->getDefault();
@@ -90,7 +106,7 @@ class LangService
 
     public function getDefault(): string
     {
-        return $this->default->getLangsCode();
+        return $this->default->getCode();
     }
 
     public function getLangs(): array
@@ -98,11 +114,11 @@ class LangService
         return $this->langList;
     }
 
-    public function fordito(string $szo_code): Szavak|string
+    public function fordito(string $word_code): Words|string
     {
-        foreach ($this->szavak as $szo) {
-            if ($szo->getSzavakCode() === $szo_code) {
-                return $szo;
+        foreach ($this->words as $word) {
+            if ($word->getCode() === $word_code) {
+                return $word;
             }
         }
 

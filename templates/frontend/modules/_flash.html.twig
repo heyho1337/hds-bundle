@@ -1,0 +1,25 @@
+<div id="flash-messages"></div>
+
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        {% if label == 'error' %}
+            <div class="mb-6 p-4 bg-red-900/20 border-2 border-red-500/50 rounded-lg">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-circle-exclamation text-red-400 text-xl mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-red-200 font-medium">{{ message|trans({}, 'security') }}</p>
+                    </div>
+                </div>
+            </div>
+        {% elseif label == 'success' %}
+            <div class="mb-6 p-4 bg-green-900/20 border-2 border-green-500/50 rounded-lg">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-circle-check text-green-400 text-xl mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="text-green-200 font-medium">{{ message }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}

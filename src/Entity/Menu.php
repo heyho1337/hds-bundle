@@ -5,8 +5,8 @@ namespace App\Entity;
 use App\Repository\MenuRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: MenuRepository::class)]
 class Menu
@@ -18,23 +18,12 @@ class Menu
 
     private static string $currentLang = 'en';
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_hu = null;
+    // JSON translation storage
+    #[ORM\Column(type: Types::JSON)]
+    private array $name = [];
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $name_en = null;
-
-    private ?string $name = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Gedmo\Slug(fields: ['name_hu'])]
-    private ?string $slug_hu = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Gedmo\Slug(fields: ['name_en'])]
-    private ?string $slug_en = null;
-
-    private ?string $slug = null;
+    #[ORM\Column(type: Types::JSON)]
+    private array $slug = [];
 
     #[ORM\ManyToOne]
     private ?MenuType $type = null;
@@ -84,6 +73,8 @@ class Menu
     public function __construct()
     {
         $this->children = new ArrayCollection();
+        $this->name = [];
+        $this->slug = [];
     }
 
     public function getId(): ?int
@@ -91,78 +82,57 @@ class Menu
         return $this->id;
     }
 
-    public function getNameHu(): ?string
+    // Smart getters/setters
+    public function getName(?string $lang = null): ?string
     {
-        return $this->name_hu;
+        $lang = $lang ?? self::$currentLang;
+        return $this->name[$lang] ?? $this->name['en'] ?? null;
     }
 
-    public function setNameHu(?string $name_hu): static
+    public function setName(?string $value, ?string $lang = null): static
     {
-        $this->name_hu = $name_hu;
-
+        $lang = $lang ?? self::$currentLang;
+        $this->name[$lang] = $value;
         return $this;
     }
 
-    public function getNameEn(): ?string
+    public function getSlug(?string $lang = null): ?string
     {
-        return $this->name_en;
+        $lang = $lang ?? self::$currentLang;
+        return $this->slug[$lang] ?? $this->slug['en'] ?? null;
     }
 
-    public function setNameEn(?string $name_en): static
+    public function setSlug(?string $value, ?string $lang = null): static
     {
-        $this->name_en = $name_en;
-
+        $lang = $lang ?? self::$currentLang;
+        $this->slug[$lang] = $value;
         return $this;
     }
 
-    public function getName(): ?string
+    // Methods to get/set all translations
+    public function getNameTranslations(): array
     {
         return $this->name;
     }
 
-    public function setName(?string $name): static
+    public function setNameTranslations(array $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
-    public function getSlugHu(): ?string
-    {
-        return $this->slug_hu;
-    }
-
-    public function setSlugHu(?string $slug_hu): static
-    {
-        $this->slug_hu = $slug_hu;
-
-        return $this;
-    }
-
-    public function getSlugEn(): ?string
-    {
-        return $this->slug_en;
-    }
-
-    public function setSlugEn(?string $slug_en): static
-    {
-        $this->slug_en = $slug_en;
-
-        return $this;
-    }
-
-    public function getSlug(): ?string
+    public function getSlugTranslations(): array
     {
         return $this->slug;
     }
 
-    public function setSlug(?string $slug): static
+    public function setSlugTranslations(array $slug): static
     {
         $this->slug = $slug;
-
         return $this;
     }
 
+    // All other getters/setters remain the same...
     public function getType(): ?MenuType
     {
         return $this->type;
@@ -171,7 +141,6 @@ class Menu
     public function setType(?MenuType $type): static
     {
         $this->type = $type;
-
         return $this;
     }
 
@@ -183,7 +152,6 @@ class Menu
     public function setOrderNum(?int $order_num): static
     {
         $this->order_num = $order_num;
-
         return $this;
     }
 
@@ -195,7 +163,6 @@ class Menu
     public function setTarget(?MenuTarget $target): static
     {
         $this->target = $target;
-
         return $this;
     }
 
@@ -207,7 +174,6 @@ class Menu
     public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
-
         return $this;
     }
 
@@ -219,7 +185,6 @@ class Menu
     public function setModifiedAt(\DateTimeImmutable $modified_at): static
     {
         $this->modified_at = $modified_at;
-
         return $this;
     }
 
@@ -231,7 +196,6 @@ class Menu
     public function setFile(?string $file): static
     {
         $this->file = $file;
-
         return $this;
     }
 
@@ -243,7 +207,6 @@ class Menu
     public function setBlogCategory(?Category $blog_category): static
     {
         $this->blog_category = $blog_category;
-
         return $this;
     }
 
@@ -255,7 +218,6 @@ class Menu
     public function setBlog(?Blog $blog): static
     {
         $this->blog = $blog;
-
         return $this;
     }
 
@@ -267,7 +229,6 @@ class Menu
     public function setPosition(?MenuPosition $position): static
     {
         $this->position = $position;
-
         return $this;
     }
 
@@ -279,7 +240,6 @@ class Menu
     public function setArticle(?Article $article): static
     {
         $this->article = $article;
-
         return $this;
     }
 
@@ -291,23 +251,7 @@ class Menu
     public function setActive(bool $active): static
     {
         $this->active = $active;
-
         return $this;
-    }
-
-    public static function setCurrentLang(string $lang): void
-    {
-        self::$currentLang = $lang;
-    }
-
-    public function __toString(): string
-    {
-        $getter = 'getName' . self::$currentLang;
-        if (method_exists($this, $getter)) {
-            return (string) $this->$getter();
-        }
-
-        return '';
     }
 
     public function getTag(): ?Tag
@@ -318,7 +262,6 @@ class Menu
     public function setTag(?Tag $tag): static
     {
         $this->tag = $tag;
-
         return $this;
     }
 
@@ -330,7 +273,6 @@ class Menu
     public function setParent(?self $parent): static
     {
         $this->parent = $parent;
-
         return $this;
     }
 
@@ -348,19 +290,31 @@ class Menu
             $this->children->add($menu);
             $menu->setParent($this);
         }
-
         return $this;
     }
 
     public function removeMenu(self $menu): static
     {
         if ($this->children->removeElement($menu)) {
-            // set the owning side to null (unless already changed)
             if ($menu->getParent() === $this) {
                 $menu->setParent(null);
             }
         }
-
         return $this;
+    }
+
+    public static function setCurrentLang(string $lang): void
+    {
+        self::$currentLang = $lang;
+    }
+
+    public static function getCurrentLang(): string
+    {
+        return self::$currentLang;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getName() ?? '';
     }
 }
