@@ -43,11 +43,23 @@ class Menu
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $file = null;
 
+    #[ORM\ManyToOne]
+    private ?Category $blog_category = null;
+
+    #[ORM\ManyToOne]
+    private ?Blog $blog = null;
+
     #[ORM\ManyToOne(inversedBy: 'children')]
     private ?MenuPosition $position = null;
 
+    #[ORM\ManyToOne]
+    private ?Article $article = null;
+
     #[ORM\Column]
     private ?bool $active = null;
+
+    #[ORM\ManyToOne]
+    private ?Tag $tag = null;
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
     private ?self $parent = null;
@@ -187,6 +199,28 @@ class Menu
         return $this;
     }
 
+    public function getBlogCategory(): ?Category
+    {
+        return $this->blog_category;
+    }
+
+    public function setBlogCategory(?Category $blog_category): static
+    {
+        $this->blog_category = $blog_category;
+        return $this;
+    }
+
+    public function getBlog(): ?Blog
+    {
+        return $this->blog;
+    }
+
+    public function setBlog(?Blog $blog): static
+    {
+        $this->blog = $blog;
+        return $this;
+    }
+
     public function getPosition(): ?MenuPosition
     {
         return $this->position;
@@ -198,6 +232,17 @@ class Menu
         return $this;
     }
 
+    public function getArticle(): ?Article
+    {
+        return $this->article;
+    }
+
+    public function setArticle(?Article $article): static
+    {
+        $this->article = $article;
+        return $this;
+    }
+
     public function isActive(): ?bool
     {
         return $this->active;
@@ -206,6 +251,17 @@ class Menu
     public function setActive(bool $active): static
     {
         $this->active = $active;
+        return $this;
+    }
+
+    public function getTag(): ?Tag
+    {
+        return $this->tag;
+    }
+
+    public function setTag(?Tag $tag): static
+    {
+        $this->tag = $tag;
         return $this;
     }
 
