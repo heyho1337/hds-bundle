@@ -40,33 +40,7 @@ security:
                 - App\Security\UserAuthenticator
                 - App\Security\GoogleAuth
 
-        # Setup firewall - strictly for /setup
-        setup:
-            pattern: ^/setup
-            lazy: true
-            stateless: false
-            provider: app_user_provider
-            entry_point: form_login
-
-            form_login:
-                login_path: setup_login
-                check_path: setup_login
-                default_target_path: /setup
-                enable_csrf: true
-
-            logout:
-                path: setup_logout
-                target: setup_login
-
-            custom_authenticators:
-                - App\Security\SetupAuthenticator
-                - App\Security\GoogleAuth
-
     access_control:
-        # Setup access control
-        - { path: ^/setup/registration, roles: PUBLIC_ACCESS }
-        - { path: ^/setup/login, roles: PUBLIC_ACCESS }
-        - { path: ^/setup, roles: ROLE_SETUP }
 
         # Admin access control
         - { path: ^/admin/login, roles: PUBLIC_ACCESS }

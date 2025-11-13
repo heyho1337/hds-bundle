@@ -38,7 +38,7 @@ class GoogleController extends AbstractController
         } catch (IdentityProviderException $e) {
             // Handle the error properly and return a response
             $this->addFlash('error', 'Google authentication failed: ' . $e->getMessage());
-            return $this->redirectToRoute('setup_login'); // or error page
+            return $this->redirectToRoute('admin_login'); // or error page
         }
     }
 

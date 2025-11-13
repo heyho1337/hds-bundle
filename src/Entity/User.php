@@ -42,17 +42,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?bool $verified = null;
 
-    /**
-     * @var Collection<int, Setup>
-     */
-    #[ORM\OneToMany(targetEntity: Setup::class, mappedBy: 'user')]
-    private Collection $setup;
-
-    public function __construct()
-    {
-        $this->setup = new ArrayCollection();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -164,36 +153,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Setup>
-     */
-    public function getSetup(): Collection
-    {
-        return $this->setup;
-    }
-
-    public function addSetup(Setup $setup): static
-    {
-        if (!$this->setup->contains($setup)) {
-            $this->setup->add($setup);
-            $setup->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSetup(Setup $setup): static
-    {
-        if ($this->setup->removeElement($setup)) {
-            // set the owning side to null (unless already changed)
-            if ($setup->getUser() === $this) {
-                $setup->setUser(null);
-            }
-        }
 
         return $this;
     }
