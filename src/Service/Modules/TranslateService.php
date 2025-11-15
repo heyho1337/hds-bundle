@@ -9,9 +9,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Service\Modules\LangService;
 use App\Repository\WordsRepository;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Intl\Languages;
-use App\Entity\EasyAdminGoogleLangs;
-use App\Repository\EasyAdminGoogleLangsRepository;
 
 class TranslateService
 {

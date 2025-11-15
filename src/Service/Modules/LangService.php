@@ -8,14 +8,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\LangsRepository;
 use App\Repository\WordsRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
-use App\Repository\EasyAdminGoogleLangsRepository;
 
 class LangService
 {
     private string $currentLang;
     private array $words;
     private array $langList;
-    private Langs $default;
+    private ?Langs $default;
     private array $eagl;
 
     public function __construct(
@@ -23,7 +22,6 @@ class LangService
         private readonly LangsRepository $langsRepo,
         private readonly RequestStack $requestStack,
         private readonly WordsRepository $wordsRepo,
-        private readonly EasyAdminGoogleLangsRepository $eaglRepo,
         private CacheService $cache,
     ) {
 
@@ -62,7 +60,7 @@ class LangService
         return $this->eagl;
     }
 
-    private function resolveLangFromCookie(): string
+    private function resolveLangFromCookie(): ?string
     {
 
         $request = $this->requestStack->getCurrentRequest();
@@ -99,14 +97,17 @@ class LangService
         return ucfirst($this->currentLang);
     }
 
-    public function getDefaultObject(): Langs
+    public function getDefaultObject(): ?Langs
     {
         return $this->default;
     }
 
-    public function getDefault(): string
+    public function getDefault(): ?string
     {
-        return $this->default->getCode();
+        if($this->default){
+            return $this->default->getCode();
+        }
+        return "";
     }
 
     public function getLangs(): array

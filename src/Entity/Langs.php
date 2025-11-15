@@ -20,7 +20,7 @@ class Langs
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(name: "is_default", type: "boolean")]
+    #[ORM\Column(name: "is_default", type: "boolean", nullable: true)]
     private ?bool $default = null;
 
     #[ORM\Column]
@@ -69,7 +69,7 @@ class Langs
         return $this->default;
     }
 
-    public function setDefault(bool $default): static
+    public function setDefault(?bool $default): static
     {
         $this->default = $default;
 
